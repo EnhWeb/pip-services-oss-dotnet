@@ -6,7 +6,7 @@ using PipServices.Commons.Connect;
 using PipServices.Commons.Errors;
 using PipServices.Commons.Refer;
 
-namespace PipServices.Data.MongoDb
+namespace PipServices.Oss.MongoDb
 {
     public class MongoDbConnectionResolver: IReferenceable, IConfigurable
     {

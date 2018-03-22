@@ -6,8 +6,9 @@ using MongoDB.Driver;
 using PipServices.Commons.Config;
 using PipServices.Commons.Data;
 using PipServices.Commons.Reflect;
+using PipServices.Data;
 
-namespace PipServices.Data.MongoDb
+namespace PipServices.Oss.MongoDb
 {
     public class IdentifiableMongoDbPersistence<T, K> : MongoDbPersistence<T>, IWriter<T, K>, IGetter<T, K>, ISetter<T>
         where T : IIdentifiable<K>

@@ -1,39 +1,61 @@
-﻿//using PipServices.Commons.Log;
-//using PipServices.Commons.Config;
-//using PipServices.Commons.Count;
-//using PipServices.Commons.Refer;
-//using Xunit;
+﻿using PipServices.Commons.Log;
+using PipServices.Commons.Config;
+using PipServices.Commons.Count;
+using PipServices.Commons.Refer;
+using Xunit;
+using PipServices.Oss.Fixtures;
+using System;
+using PipServices.Commons.Convert;
 
-//namespace PipServices.Oss.ElasticSearch
-//{
-//    //[TestClass]
-//    public sealed class LogCountersTest
-//    {
-//        private readonly LogCounters _counters = new LogCounters();
-//        private readonly CountersFixture _fixture;
+namespace PipServices.Oss.ElasticSearch
+{
+    public sealed class ElasticSearchLoggerTest: IDisposable
+    {
+        private readonly bool _enabled;
+        private readonly ElasticSearchLogger _logger;
+        private readonly LoggerFixture _fixture;
 
-//        public LogCountersTest()
-//        {
-//            var log = new ConsoleLogger();
-//            var refs = References.FromTuples(
-//                DefaultLoggerFactory.ConsoleLoggerDescriptor, log
-//            );
+        public ElasticSearchLoggerTest()
+        {
+            var ELASTICSEARCH_ENABLED = Environment.GetEnvironmentVariable("ELASTICSEARCH_ENABLED") ?? "true";
+            var ELASTICSEARCH_SERVICE_HOST = Environment.GetEnvironmentVariable("ELASTICSEARCH_SERVICE_HOST") ?? "localhost";
+            var ELASTICSEARCH_SERVICE_PORT = Environment.GetEnvironmentVariable("ELASTICSEARCH_SERVICE_PORT") ?? "9200";
 
-//            _counters.SetReferences(refs);
+            _enabled = BooleanConverter.ToBoolean(ELASTICSEARCH_ENABLED);
+            if (_enabled)
+            {
+                _logger = new ElasticSearchLogger();
+                _logger.Configure(ConfigParams.FromTuples(
+                    "level", "trace",
+                    "source", "test",
+                    "connection.host", ELASTICSEARCH_SERVICE_HOST,
+                    "connection.port", ELASTICSEARCH_SERVICE_PORT
+                ));
 
-//            _fixture = new CountersFixture(_counters);
-//        }
+                _fixture = new LoggerFixture(_logger);
 
-//        [Fact]
-//        public void TestSimpleCounters()
-//        {
-//            _fixture.TestSimpleCounters();
-//        }
+                _logger.OpenAsync(null).Wait();
+            }
+        }
 
-//        [Fact]
-//        public void TestMeasureElapsedTime()
-//        {
-//            _fixture.TestMeasureElapsedTime();
-//        }
-//    }
-//}
+        public void Dispose()
+        {
+            if (_logger != null)
+                _logger.CloseAsync(null).Wait();
+        }
+
+        [Fact]
+        public void TestSimpleLogging()
+        {
+            if (_enabled)
+                _fixture.TestSimpleLogging();
+        }
+
+        [Fact]
+        public void TestErrorLogging()
+        {
+            if (_enabled)
+                _fixture.TestErrorLogging();
+        }
+    }
+}

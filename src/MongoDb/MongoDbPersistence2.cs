@@ -9,7 +9,7 @@ using PipServices.Commons.Log;
 using PipServices.Commons.Refer;
 using PipServices.Commons.Run;
 
-namespace PipServices.Data.MongoDb
+namespace PipServices.Oss.MongoDb
 {
     public class MongoDbPersistence<T> : IReferenceable, IReconfigurable, IOpenable, ICleanable
     {

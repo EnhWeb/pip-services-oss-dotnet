@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>PipServices.Oss</id>
+    <version>1.0.0</version>
+    <title>PipServices.Oss</title>
+    <authors>Sergey Seroukhov</authors>
+    <projectUrl>https://github.com/pip-services/pip-services-oss-dotnet</projectUrl>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <iconUrl>https://raw.githubusercontent.com/pip-services/pip-services/master/design/Icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Open source components for Pip.Services in .NET</description>
+    <releaseNotes>Release</releaseNotes>
+    <copyright>Conceptual Vision Consulting LLC. 2018</copyright>
+    <tags>pip-services open source</tags>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="PipServices.Commons" version="2.2.5" />
+        <dependency id="PipServices.Net" version="2.2.4" />
+        <dependency id="PipServices.Data" version="2.2.3" />
+        <dependency id="MongoDB.Driver" version="2.5.0" />
+        <dependency id="Elasticsearch.Net" version="6.0.2" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="obj\PipServices.Oss.deps.json" target="lib\netstandard2.0" />
+    <file src="obj\PipServices.Oss.dll" target="lib\netstandard2.0" />
+    <file src="obj\PipServices.Oss.pdb" target="lib\netstandard2.0" />
+  </files>
+</package>

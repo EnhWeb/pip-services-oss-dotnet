@@ -8,18 +8,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using PipServices.Data;
 
-namespace PipServices.Data.Test
+namespace PipServices.Oss.Fixtures
 {
     public class PersistenceFixture
     {
-        public class Dummy : IStringIdentifiable
-        {
-            public string Id { get; set; }
-            public string Key { get; set; }
-            public string Content { get; set; }
-        }
-
         private readonly Dummy _dummy1 = new Dummy
         {
             Key = "Key 1",

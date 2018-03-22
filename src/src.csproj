@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>PipServices.Oss</AssemblyName>
+    <RootNamespace>PipServices.Oss</RootNamespace>
+    <ApplicationIcon />
+    <Win32Resource />
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType></DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="PipServices.Net" Version="2.2.4" />
+    <PackageReference Include="PipServices.Data" Version="2.2.3" />
+    <PackageReference Include="MongoDB.Driver" Version="2.5.0" />
+    <PackageReference Include="Elasticsearch.Net" Version="6.0.2" />
+    <PackageReference Include="PipServices.Commons" Version="2.2.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Build\" />
+    <Folder Include="ElasticSearch\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Commands\Command.cs" />
+    <Compile Remove="Commands\CommandSet.cs" />
+    <Compile Remove="Commands\Event.cs" />
+    <Compile Remove="Commands\ICommand.cs" />
+    <Compile Remove="Commands\ICommandIntercepter.cs" />
+    <Compile Remove="Commands\ICommandable.cs" />
+    <Compile Remove="Config\CachedConfigReader.cs" />
+    <Compile Remove="Config\ConfigParams.cs" />
+    <Compile Remove="Config\ConfigReader.cs" />
+    <Compile Remove="Config\DefaultConfigReaderFactory.cs" />
+    <Compile Remove="Config\FileConfigReader.cs" />
+    <Compile Remove="Connect\ConnectionParams.cs" />
+    <Compile Remove="Connect\ConnectionResolver.cs" />
+    <Compile Remove="Connect\DefaultDiscoveryFactory.cs" />
+    <Compile Remove="Convert\ArrayConverter.cs" />
+    <Compile Remove="Convert\BooleanConverter.cs" />
+    <Compile Remove="Convert\DateTimeConverter.cs" />
+    <Compile Remove="Convert\DecimalConverter.cs" />
+    <Compile Remove="Convert\DoubleConverter.cs" />
+    <Compile Remove="Convert\EnumConverter.cs" />
+    <Compile Remove="Count\CachedCounters.cs" />
+    <Compile Remove="Count\CompositeCounters.cs" />
+    <Compile Remove="Count\Counter.cs" />
+    <Compile Remove="Count\CounterType.cs" />
+    <Compile Remove="Count\DefaultCountersFactory.cs" />
+  </ItemGroup>
+</Project>

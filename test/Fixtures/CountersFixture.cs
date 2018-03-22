@@ -2,7 +2,7 @@
 using PipServices.Commons.Count;
 using Xunit;
 
-namespace PipServices.Commons.Test.Count
+namespace PipServices.Oss.Fixtures
 {
     public sealed class CountersFixture
     {

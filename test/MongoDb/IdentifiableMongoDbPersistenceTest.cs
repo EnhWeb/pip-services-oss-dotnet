@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Threading;
-using PipServices.Data.MongoDb;
 using PipServices.Commons.Config;
 using Xunit;
+using PipServices.Oss.Fixtures;
 
-namespace PipServices.Data.Test.MongoDb
+namespace PipServices.Oss.MongoDb
 {
     public sealed class IdentifiableMongoDbPersistenceTest : IDisposable
     {
-        private static IdentifiableMongoDbPersistence<PersistenceFixture.Dummy, string> Db { get; } 
-            = new IdentifiableMongoDbPersistence<PersistenceFixture.Dummy, string>("dummies");
+        private static IdentifiableMongoDbPersistence<Dummy, string> Db { get; } 
+            = new IdentifiableMongoDbPersistence<Dummy, string>("dummies");
         private static PersistenceFixture Fixture { get; set; }
 
         public IdentifiableMongoDbPersistenceTest()

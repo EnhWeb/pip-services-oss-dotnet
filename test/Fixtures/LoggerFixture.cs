@@ -2,13 +2,13 @@
 using System;
 using Xunit;
 
-namespace PipServices.Commons.Test.Log
+namespace PipServices.Oss.Fixtures
 {
     public sealed class LoggerFixture
     {
-        private readonly ILogger Logger;
+        private readonly CachedLogger Logger;
 
-        public LoggerFixture(ILogger logger)
+        public LoggerFixture(CachedLogger logger)
         {
             Logger = logger;
         }
@@ -29,6 +29,8 @@ namespace PipServices.Commons.Test.Log
             Logger.Info(null, "Information message");
             Logger.Debug(null, "Debug message");
             Logger.Trace(null, "Trace message");
+
+            Logger.Dump();
         }
 
         public void TestErrorLogging()
@@ -43,6 +45,8 @@ namespace PipServices.Commons.Test.Log
                 Logger.Fatal("123", ex, "Fatal error");
                 Logger.Error("123", ex, "Recoverable error");
             }
+
+            Logger.Dump();
         }
     }
 }
