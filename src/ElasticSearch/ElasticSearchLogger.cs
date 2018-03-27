@@ -9,6 +9,7 @@ using PipServices.Commons.Errors;
 using PipServices.Commons.Log;
 using PipServices.Commons.Refer;
 using PipServices.Commons.Run;
+using PipServices.Container.Info;
 using PipServices.Net.Rest;
 
 namespace PipServices.Oss.ElasticSearch
@@ -18,6 +19,7 @@ namespace PipServices.Oss.ElasticSearch
         private FixedRateTimer _timer;
         private HttpConnectionResolver _connectionResolver = new HttpConnectionResolver();
         private ElasticLowLevelClient _client;
+        private ContainerInfo _containerInfo;
         private string _index = "log";
 
         public ElasticSearchLogger()
@@ -34,6 +36,11 @@ namespace PipServices.Oss.ElasticSearch
         public virtual void SetReferences(IReferences references)
         {
             _connectionResolver.SetReferences(references);
+
+            _containerInfo = references.GetOneOptional<ContainerInfo>(
+                new Descriptor("pip-services", "container-info", "default", "*", "1.0"));
+            if (_containerInfo != null && string.IsNullOrEmpty(_source))
+                _source = _containerInfo.Name;
         }
 
 		public bool IsOpened()

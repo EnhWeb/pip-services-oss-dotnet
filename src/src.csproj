@@ -12,15 +12,17 @@
     <DebugType></DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="PipServices.Net" Version="2.2.4" />
-    <PackageReference Include="PipServices.Data" Version="2.2.3" />
     <PackageReference Include="MongoDB.Driver" Version="2.5.0" />
     <PackageReference Include="Elasticsearch.Net" Version="6.0.2" />
-    <PackageReference Include="PipServices.Commons" Version="2.2.7" />
+    <PackageReference Include="PipServices.Data" Version="2.2.5" />
+    <PackageReference Include="PipServices.Commons" Version="2.2.10" />
+    <PackageReference Include="PipServices.Container" Version="2.1.4" />
+    <PackageReference Include="PipServices.Net" Version="2.3.5" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Build\" />
     <Folder Include="ElasticSearch\" />
+    <Folder Include="Prometheus\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Commands\Command.cs" />
@@ -48,5 +50,6 @@
     <Compile Remove="Count\Counter.cs" />
     <Compile Remove="Count\CounterType.cs" />
     <Compile Remove="Count\DefaultCountersFactory.cs" />
+    <Compile Remove="Prometheus\PrometheusRestClient.cs" />
   </ItemGroup>
 </Project>

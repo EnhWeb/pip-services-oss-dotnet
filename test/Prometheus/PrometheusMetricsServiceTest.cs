@@ -8,19 +8,19 @@ using Xunit;
 
 namespace PipServices.Oss.Prometheus
 {
-    public class PrometheusMetricsRestServiceTest : IDisposable
+    public class PrometheusMetricsServiceTest : IDisposable
     {
-        private PrometheusMetricsRestService _service;
+        private PrometheusMetricsService _service;
         private PrometheusCounters _counters;
 
-        public PrometheusMetricsRestServiceTest()
+        public PrometheusMetricsServiceTest()
         {
             var config = ConfigParams.FromTuples(
                 "connection.protocol", "http",
                 "connection.host", "localhost",
                 "connection.port", "3000"
             );
-            _service = new PrometheusMetricsRestService();
+            _service = new PrometheusMetricsService();
             _service.Configure(config);
 
             var containerInfo = new ContainerInfo();

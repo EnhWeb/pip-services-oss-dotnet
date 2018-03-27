@@ -7,11 +7,11 @@ using PipServices.Net.Rest;
 
 namespace PipServices.Oss.Prometheus
 {
-    public class PrometheusMetricsRestService: RestService
+    public class PrometheusMetricsService: RestService
     {
         private PrometheusCounters _prometheusCounters;
 
-        public PrometheusMetricsRestService()
+        public PrometheusMetricsService()
         {
             _dependencyResolver.Put("counters", new Descriptor("pip-services", "counters", "prometheus", "*", "1.0"));
         }
