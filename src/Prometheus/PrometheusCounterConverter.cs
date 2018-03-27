@@ -16,7 +16,8 @@ namespace PipServices.Oss.Prometheus
 
             foreach (var counter in counters)
             {
-                var counterName = counter.Name.ToLowerInvariant().Replace(".", "_");
+                var counterName = counter.Name.ToLowerInvariant()
+                    .Replace(".", "_").Replace("/", "_");
 
                 switch (counter.Type)
                 {
