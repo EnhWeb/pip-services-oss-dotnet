@@ -1,8 +1,8 @@
 ﻿using System;
 using PipServices.Commons.Config;
 using PipServices.Commons.Convert;
+using PipServices.Commons.Info;
 using PipServices.Commons.Refer;
-using PipServices.Container.Info;
 using PipServices.Oss.Fixtures;
 using Xunit;
 
@@ -30,13 +30,12 @@ namespace PipServices.Oss.Prometheus
                     "connection.port", PUSHGATEWAY_SERVICE_PORT
                 ));
 
-                var containerInfo = new ContainerInfo();
-                containerInfo.Name = "Test";
-                containerInfo.Description = "This is a test container";
-                containerInfo.ContainerId = "Test";
+                var contextInfo = new ContextInfo();
+                contextInfo.Name = "Test";
+                contextInfo.Description = "This is a test container";
 
                 var references = References.FromTuples(
-                    new Descriptor("pip-services", "container-info", "default", "default", "1.0"), containerInfo,
+                    new Descriptor("pip-services", "context-info", "default", "default", "1.0"), contextInfo,
                     new Descriptor("pip-services", "counters", "prometheus", "default", "1.0"), _counters
                 );
                 _counters.SetReferences(references);

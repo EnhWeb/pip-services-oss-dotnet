@@ -7,6 +7,7 @@ Components and technologies supported by the library:
 
 - **ElasticSearch** - logger
 - **MongoDB** - abstract persistence objects
+- **Prometheus** - counters and metrics service
 
 Quick Links:
 

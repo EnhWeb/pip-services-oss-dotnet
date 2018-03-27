@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using PipServices.Commons.Config;
 using PipServices.Commons.Count;
+using PipServices.Commons.Info;
 using PipServices.Commons.Log;
 using PipServices.Commons.Refer;
 using PipServices.Commons.Run;
-using PipServices.Container.Info;
 using PipServices.Net.Rest;
 
 namespace PipServices.Oss.Prometheus
@@ -40,12 +40,12 @@ namespace PipServices.Oss.Prometheus
             _logger.SetReferences(references);
             _connectionResolver.SetReferences(references);
 
-            var containerInfo = references.GetOneOptional<ContainerInfo>(
-                new Descriptor("pip-services", "container-info", "default", "*", "1.0"));
-            if (containerInfo != null && string.IsNullOrEmpty(_source))
-                _source = containerInfo.Name;
-            if (containerInfo != null && string.IsNullOrEmpty(_instance))
-                _instance = containerInfo.ContainerId;
+            var contextInfo = references.GetOneOptional<ContextInfo>(
+                new Descriptor("pip-services", "context-info", "default", "*", "1.0"));
+            if (contextInfo != null && string.IsNullOrEmpty(_source))
+                _source = contextInfo.Name;
+            if (contextInfo != null && string.IsNullOrEmpty(_instance))
+                _instance = contextInfo.ContextId;
         }
 
         public bool IsOpened()

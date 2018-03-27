@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using PipServices.Commons.Config;
 using PipServices.Commons.Convert;
+using PipServices.Commons.Info;
 using PipServices.Commons.Refer;
-using PipServices.Container.Info;
 using Xunit;
 
 namespace PipServices.Oss.Prometheus
@@ -23,14 +23,14 @@ namespace PipServices.Oss.Prometheus
             _service = new PrometheusMetricsService();
             _service.Configure(config);
 
-            var containerInfo = new ContainerInfo();
-            containerInfo.Name = "Test";
-            containerInfo.Description = "This is a test container";
+            var contextInfo = new ContextInfo();
+            contextInfo.Name = "Test";
+            contextInfo.Description = "This is a test container";
 
             _counters = new PrometheusCounters();
 
             var references = References.FromTuples(
-                new Descriptor("pip-services", "container-info", "default", "default", "1.0"), containerInfo,
+                new Descriptor("pip-services", "context-info", "default", "default", "1.0"), contextInfo,
                 new Descriptor("pip-services", "counters", "prometheus", "default", "1.0"), _counters,
                 new Descriptor("pip-services", "metrics-service", "prometheus", "default", "1.0"), _service
             );
