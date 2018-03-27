@@ -28,9 +28,11 @@ namespace PipServices.Oss.Prometheus
                         builder.Append("# TYPE ").Append(counterName).Append("_max gauge\n");
                         builder.Append(counterName).Append("_max ").Append(StringConverter.ToString(counter.Max)).Append("\n");
                         builder.Append("# TYPE ").Append(counterName).Append("_min gauge\n");
-                        builder.Append(counterName).Append("_min ").Append(StringConverter.ToString(counter.Max)).Append("\n");
+                        builder.Append(counterName).Append("_min ").Append(StringConverter.ToString(counter.Min)).Append("\n");
                         builder.Append("# TYPE ").Append(counterName).Append("_average gauge\n");
                         builder.Append(counterName).Append("_average ").Append(StringConverter.ToString(counter.Average)).Append("\n");
+                        builder.Append("# TYPE ").Append(counterName).Append("_count gauge\n");
+                        builder.Append(counterName).Append("_count ").Append(StringConverter.ToString(counter.Count)).Append("\n");
                         break;
                     case CounterType.LastValue:
                         builder.Append("# TYPE ").Append(counterName).Append(" gauge\n");
@@ -40,9 +42,11 @@ namespace PipServices.Oss.Prometheus
                         builder.Append("# TYPE ").Append(counterName).Append("_max gauge\n");
                         builder.Append(counterName).Append("_max ").Append(StringConverter.ToString(counter.Max)).Append("\n");
                         builder.Append("# TYPE ").Append(counterName).Append("_min gauge\n");
-                        builder.Append(counterName).Append("_min ").Append(StringConverter.ToString(counter.Max)).Append("\n");
+                        builder.Append(counterName).Append("_min ").Append(StringConverter.ToString(counter.Min)).Append("\n");
                         builder.Append("# TYPE ").Append(counterName).Append("_average gauge\n");
                         builder.Append(counterName).Append("_average ").Append(StringConverter.ToString(counter.Average)).Append("\n");
+                        builder.Append("# TYPE ").Append(counterName).Append("_count gauge\n");
+                        builder.Append(counterName).Append("_count ").Append(StringConverter.ToString(counter.Count)).Append("\n");
                         break;
                     //case CounterType.Timestamp: // Prometheus doesn't support non-numeric metrics
                         //builder.Append("# TYPE ").Append(counterName).Append(" untyped\n");
