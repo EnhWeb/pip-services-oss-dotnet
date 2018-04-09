@@ -13,30 +13,35 @@ using PipServices.Net.Rest;
 
 namespace PipServices.Oss.ElasticSearch
 {
-    public class ElasticSearchLogger: CachedLogger, IReferenceable, IOpenable
+    public class ElasticSearchLogger : CachedLogger, IReferenceable, IOpenable
     {
         private FixedRateTimer _timer;
         private HttpConnectionResolver _connectionResolver = new HttpConnectionResolver();
         private ElasticLowLevelClient _client;
-        private string _index = "log";
+        private string _indexName = "log";
+
+        private DateTime _nextIndexCreationDate = DateTime.MinValue;
+
+        private string _indexDateFormat;
 
         public ElasticSearchLogger()
         { }
 
-		public override void Configure(ConfigParams config)
-		{
+        public override void Configure(ConfigParams config)
+        {
             base.Configure(config);
             _connectionResolver.Configure(config);
 
-            _index = config.GetAsStringWithDefault("index", _index);
-		}
+            _indexName = config.GetAsStringWithDefault("index", _indexName);
+            _indexDateFormat = config.GetAsStringWithDefault("indexDateFormat", null);
+        }
 
         public override void SetReferences(IReferences references)
         {
             _connectionResolver.SetReferences(references);
         }
 
-		public bool IsOpened()
+        public bool IsOpened()
         {
             return _timer != null;
         }
@@ -55,7 +60,25 @@ namespace PipServices.Oss.ElasticSearch
             _client = new ElasticLowLevelClient(settings);
 
             // Create index if it doesn't exist
-            var response = await _client.IndicesExistsAsync<StringResponse>(_index);
+            await CreateIndex(correlationId);
+
+            if (_timer == null)
+            {
+                _timer = new FixedRateTimer(OnTimer, _interval, _interval);
+                _timer.Start();
+            }
+        }
+
+        private async Task CreateIndex(string correlationId)
+        {
+            var now = DateTime.UtcNow;
+            if (!string.IsNullOrEmpty(_indexDateFormat) && now < _nextIndexCreationDate) return;
+
+            var today = now.Date;
+            _nextIndexCreationDate = today.AddDays(1);
+
+            var index = string.IsNullOrEmpty(_indexDateFormat) ? _indexName : $"{_indexName}-{DateTime.UtcNow.Date.ToString(_indexDateFormat)}";
+            var response = await _client.IndicesExistsAsync<StringResponse>(index);
             if (response.HttpStatusCode == 404)
             {
                 var request = new
@@ -96,19 +119,13 @@ namespace PipServices.Oss.ElasticSearch
                     }
                 };
                 var json = JsonConverter.ToJson(request);
-                response = await _client.IndicesCreateAsync<StringResponse>(_index, PostData.String(json));
+                response = await _client.IndicesCreateAsync<StringResponse>(_indexName, PostData.String(json));
                 if (!response.Success)
                     throw new ConnectionException(correlationId, "CANNOT_CREATE_INDEX", response.Body);
             }
             else if (!response.Success)
             {
                 throw new ConnectionException(correlationId, "CONNECTION_FAILED", response.Body);
-            }
-
-            if (_timer == null)
-            {
-                _timer = new FixedRateTimer(OnTimer, _interval, _interval);
-                _timer.Start();
             }
         }
 
@@ -126,12 +143,19 @@ namespace PipServices.Oss.ElasticSearch
         }
 
         private void OnTimer()
-        {            
+        {
+            var now = DateTime.UtcNow;
+            if (!string.IsNullOrEmpty(_indexDateFormat) && now > _nextIndexCreationDate)
+            {
+                Task.Run(async () => await CreateIndex(null));
+            }
             Dump();
         }
 
         protected override void Save(List<LogMessage> messages)
-		{
+        {
+            // if (messages.Count == 0) return;
+
             if (_client == null)
                 throw new InvalidStateException("elasticsearch_logger", "NOT_OPENED", "ElasticSearchLogger is not opened");
 
@@ -142,9 +166,9 @@ namespace PipServices.Oss.ElasticSearch
                 bulk.Add(JsonConverter.ToJson(message));
             }
 
-            var response = _client.Bulk<StringResponse>(_index, "log_message", PostData.MultiJson(bulk));
+            var response = _client.Bulk<StringResponse>(_indexName, "log_message", PostData.MultiJson(bulk));
             if (!response.Success)
                 throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
-		}
-	}
+        }
+    }
 }
