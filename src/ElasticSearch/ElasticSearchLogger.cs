@@ -22,7 +22,6 @@ namespace PipServices.Oss.ElasticSearch
         private string _indexName = "log";
         private bool _dailyIndex = false;
         private string _currentIndexName;
-        private DateTime _nextDailyIndex = DateTime.MinValue;
 
         public ElasticSearchLogger()
         { }
@@ -69,21 +68,21 @@ namespace PipServices.Oss.ElasticSearch
             }
         }
 
+        private string GetCurrentIndex() 
+        {
+            if (!_dailyIndex) return _indexName;
+
+            var today = DateTime.UtcNow.Date;
+            var dateSuffix = today.ToString("yyyyMMdd");
+            return _indexName + "-" + dateSuffix;  
+        }
+
         private async Task CreateIndex(string correlationId, bool force)
         {
-            var now = DateTime.UtcNow;
-            if (!force && now < _nextDailyIndex) return;
+            var newIndex = GetCurrentIndex();
+            if (!force && _currentIndexName == newIndex) return;
 
-            if (_dailyIndex) {
-                var today = now.Date;
-                _nextDailyIndex = today.AddDays(1);
-
-                var dateSuffix = today.ToString("yyyyMMdd");
-                _currentIndexName = _indexName + "-" + dateSuffix;   
-            } else {
-                _currentIndexName = _indexName;
-            }
-
+            _currentIndexName = newIndex;
             var response = await _client.IndicesExistsAsync<StringResponse>(_currentIndexName);
             if (response.HttpStatusCode == 404)
             {
@@ -125,9 +124,17 @@ namespace PipServices.Oss.ElasticSearch
                     }
                 };
                 var json = JsonConverter.ToJson(request);
-                response = await _client.IndicesCreateAsync<StringResponse>(_currentIndexName, PostData.String(json));
-                if (!response.Success)
-                    throw new ConnectionException(correlationId, "CANNOT_CREATE_INDEX", response.Body);
+                try
+                {
+                    response = await _client.IndicesCreateAsync<StringResponse>(_currentIndexName, PostData.String(json));
+                    if (!response.Success)
+                        throw new ConnectionException(correlationId, "CANNOT_CREATE_INDEX", response.Body);
+                }
+                catch (Exception ex)
+                {
+                    if (!ex.Message.Contains("resource_already_exists"))
+                        throw;
+                }
             }
             else if (!response.Success)
             {
