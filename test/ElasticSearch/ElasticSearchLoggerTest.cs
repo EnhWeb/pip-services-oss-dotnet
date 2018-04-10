@@ -28,6 +28,8 @@ namespace PipServices.Oss.ElasticSearch
                 _logger.Configure(ConfigParams.FromTuples(
                     "level", "trace",
                     "source", "test",
+                    "index", "log",
+                    "daily", true,
                     "connection.host", ELASTICSEARCH_SERVICE_HOST,
                     "connection.port", ELASTICSEARCH_SERVICE_PORT
                 ));

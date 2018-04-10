@@ -15,14 +15,14 @@ namespace PipServices.Oss.ElasticSearch
 {
     public class ElasticSearchLogger : CachedLogger, IReferenceable, IOpenable
     {
+        private object _lock = new object();
         private FixedRateTimer _timer;
         private HttpConnectionResolver _connectionResolver = new HttpConnectionResolver();
         private ElasticLowLevelClient _client;
         private string _indexName = "log";
-
-        private DateTime _nextIndexCreationDate = DateTime.MinValue;
-
-        private string _indexDateFormat;
+        private bool _dailyIndex = false;
+        private string _currentIndexName;
+        private DateTime _nextDailyIndex = DateTime.MinValue;
 
         public ElasticSearchLogger()
         { }
@@ -33,7 +33,7 @@ namespace PipServices.Oss.ElasticSearch
             _connectionResolver.Configure(config);
 
             _indexName = config.GetAsStringWithDefault("index", _indexName);
-            _indexDateFormat = config.GetAsStringWithDefault("indexDateFormat", null);
+            _dailyIndex = config.GetAsBooleanWithDefault("daily", _dailyIndex);
         }
 
         public override void SetReferences(IReferences references)
@@ -60,7 +60,7 @@ namespace PipServices.Oss.ElasticSearch
             _client = new ElasticLowLevelClient(settings);
 
             // Create index if it doesn't exist
-            await CreateIndex(correlationId);
+            await CreateIndex(correlationId, true);
 
             if (_timer == null)
             {
@@ -69,16 +69,22 @@ namespace PipServices.Oss.ElasticSearch
             }
         }
 
-        private async Task CreateIndex(string correlationId)
+        private async Task CreateIndex(string correlationId, bool force)
         {
             var now = DateTime.UtcNow;
-            if (!string.IsNullOrEmpty(_indexDateFormat) && now < _nextIndexCreationDate) return;
+            if (!force && now < _nextDailyIndex) return;
 
-            var today = now.Date;
-            _nextIndexCreationDate = today.AddDays(1);
+            if (_dailyIndex) {
+                var today = now.Date;
+                _nextDailyIndex = today.AddDays(1);
 
-            var index = string.IsNullOrEmpty(_indexDateFormat) ? _indexName : $"{_indexName}-{DateTime.UtcNow.Date.ToString(_indexDateFormat)}";
-            var response = await _client.IndicesExistsAsync<StringResponse>(index);
+                var dateSuffix = today.ToString("yyyyMMdd");
+                _currentIndexName = _indexName + "-" + dateSuffix;   
+            } else {
+                _currentIndexName = _indexName;
+            }
+
+            var response = await _client.IndicesExistsAsync<StringResponse>(_currentIndexName);
             if (response.HttpStatusCode == 404)
             {
                 var request = new
@@ -119,7 +125,7 @@ namespace PipServices.Oss.ElasticSearch
                     }
                 };
                 var json = JsonConverter.ToJson(request);
-                response = await _client.IndicesCreateAsync<StringResponse>(_indexName, PostData.String(json));
+                response = await _client.IndicesCreateAsync<StringResponse>(_currentIndexName, PostData.String(json));
                 if (!response.Success)
                     throw new ConnectionException(correlationId, "CANNOT_CREATE_INDEX", response.Body);
             }
@@ -144,11 +150,6 @@ namespace PipServices.Oss.ElasticSearch
 
         private void OnTimer()
         {
-            var now = DateTime.UtcNow;
-            if (!string.IsNullOrEmpty(_indexDateFormat) && now > _nextIndexCreationDate)
-            {
-                Task.Run(async () => await CreateIndex(null));
-            }
             Dump();
         }
 
@@ -159,16 +160,21 @@ namespace PipServices.Oss.ElasticSearch
             if (_client == null)
                 throw new InvalidStateException("elasticsearch_logger", "NOT_OPENED", "ElasticSearchLogger is not opened");
 
-            var bulk = new List<string>();
-            foreach (var message in messages)
+            lock (_lock)
             {
-                bulk.Add(JsonConverter.ToJson(new { index = new { _index = "log", _type = "log_message", _id = IdGenerator.NextLong() } }));
-                bulk.Add(JsonConverter.ToJson(message));
-            }
+                CreateIndex("elasticsearch_logger", false).Wait();
 
-            var response = _client.Bulk<StringResponse>(_indexName, "log_message", PostData.MultiJson(bulk));
-            if (!response.Success)
-                throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
+                var bulk = new List<string>();
+                foreach (var message in messages)
+                {
+                    bulk.Add(JsonConverter.ToJson(new { index = new { _index = "log", _type = "log_message", _id = IdGenerator.NextLong() } }));
+                    bulk.Add(JsonConverter.ToJson(message));
+                }
+
+                var response = _client.Bulk<StringResponse>(_currentIndexName, "log_message", PostData.MultiJson(bulk));
+                if (!response.Success)
+                    throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
+            }
         }
     }
 }
