@@ -70,7 +70,7 @@ namespace PipServices.Oss.Prometheus
             catch (Exception ex)
             {
                 _client = null;
-                _logger.Warn(correlationId, ex, "Connection to Prometheus server is not configured");
+                _logger.Warn(correlationId, "Connection to Prometheus server is not configured: " + ex.Message);
             }
             finally
             {
