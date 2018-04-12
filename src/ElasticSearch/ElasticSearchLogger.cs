@@ -37,6 +37,7 @@ namespace PipServices.Oss.ElasticSearch
 
         public override void SetReferences(IReferences references)
         {
+            base.SetReferences(references);
             _connectionResolver.SetReferences(references);
         }
 
