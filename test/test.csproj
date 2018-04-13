@@ -42,7 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Fixtures\" />
-    <Folder Include="Prometheus\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="xunit.runner.json">

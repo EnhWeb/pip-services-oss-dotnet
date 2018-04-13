@@ -93,7 +93,7 @@ namespace PipServices.Oss.Prometheus
 
             try
             {
-                var body = PrometheusCounterConverter.ToString(counters);
+                var body = PrometheusCounterConverter.ToString(counters, null, null);
 
                 using (HttpContent requestContent = new StringContent(body, Encoding.UTF8, "text/plain"))
                 {
