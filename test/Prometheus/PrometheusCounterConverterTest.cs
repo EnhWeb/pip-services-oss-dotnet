@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using PipServices.Commons.Config;
-using PipServices.Commons.Convert;
 using PipServices.Commons.Count;
-using PipServices.Commons.Info;
-using PipServices.Commons.Refer;
-using PipServices.Oss.Fixtures;
 using Xunit;
 
 namespace PipServices.Oss.Prometheus
@@ -120,13 +115,13 @@ namespace PipServices.Oss.Prometheus
         {
             var counters = new List<Counter>
             {
-                new Counter("MyEndPoint1.MyCommand1.exec_time", CounterType.Increment)
+                new Counter("MyService1.MyCommand1.exec_time", CounterType.Increment)
                 {
                     Count = 2,
                     Last = 3,
                     Time = DateTime.MinValue
                 },
-                new Counter("MyEndPoint2.MyCommand2.exec_time", CounterType.Increment)
+                new Counter("MyService2.MyCommand2.exec_time", CounterType.Increment)
                 {
                     Count = 5,
                     Last = 10,
@@ -134,8 +129,8 @@ namespace PipServices.Oss.Prometheus
                 }
             };
             var body = PrometheusCounterConverter.ToString(counters, "MyApp", "MyInstance");
-            const string expected = "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 2\n"
-                                  + "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 5\n";
+            const string expected = "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 2\n"
+                                  + "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 5\n";
             Assert.Equal(expected, body);
         }
 
@@ -144,7 +139,7 @@ namespace PipServices.Oss.Prometheus
         {
             var counters = new List<Counter>
             {
-                new Counter("MyEndPoint1.MyCommand1.exec_time", CounterType.Interval)
+                new Counter("MyService1.MyCommand1.exec_time", CounterType.Interval)
                 {
                     Min = 1,
                     Max = 3,
@@ -153,7 +148,7 @@ namespace PipServices.Oss.Prometheus
                     Last = 3,
                     Time = DateTime.MinValue
                 },
-                new Counter("MyEndPoint2.MyCommand2.exec_time", CounterType.Interval)
+                new Counter("MyService2.MyCommand2.exec_time", CounterType.Interval)
                 {
                     Min = 2,
                     Max = 4,
@@ -166,14 +161,14 @@ namespace PipServices.Oss.Prometheus
             var body = PrometheusCounterConverter.ToString(counters, "MyApp", "MyInstance");
 
             const string expected =
-                "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 3\n"
-                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 1\n"
-                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 2\n"
-                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 2\n"
-                + "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 4\n"
-                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 2\n"
-                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 3\n"
-                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 5\n";
+                "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 3\n"
+                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 1\n"
+                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 2\n"
+                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 2\n"
+                + "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 4\n"
+                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 2\n"
+                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 3\n"
+                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 5\n";
             Assert.Equal(expected, body);
         }
 
@@ -182,7 +177,7 @@ namespace PipServices.Oss.Prometheus
         {
             var counters = new List<Counter>
             {
-                new Counter("MyEndPoint1.MyCommand1.exec_time", CounterType.Statistics)
+                new Counter("MyService1.MyCommand1.exec_time", CounterType.Statistics)
                 {
                     Min = 1,
                     Max = 3,
@@ -191,7 +186,7 @@ namespace PipServices.Oss.Prometheus
                     Last = 3,
                     Time = DateTime.MinValue
                 },
-                new Counter("MyEndPoint2.MyCommand2.exec_time", CounterType.Statistics)
+                new Counter("MyService2.MyCommand2.exec_time", CounterType.Statistics)
                 {
                     Min = 2,
                     Max = 4,
@@ -204,14 +199,14 @@ namespace PipServices.Oss.Prometheus
             var body = PrometheusCounterConverter.ToString(counters, "MyApp", "MyInstance");
 
             const string expected =
-                "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 3\n"
-                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 1\n"
-                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 2\n"
-                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 2\n"
-                + "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 4\n"
-                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 2\n"
-                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 3\n"
-                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 5\n";
+                "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 3\n"
+                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 1\n"
+                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 2\n"
+                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 2\n"
+                + "# TYPE exec_time_max gauge\nexec_time_max{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 4\n"
+                + "# TYPE exec_time_min gauge\nexec_time_min{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 2\n"
+                + "# TYPE exec_time_average gauge\nexec_time_average{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 3\n"
+                + "# TYPE exec_time_count gauge\nexec_time_count{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 5\n";
             Assert.Equal(expected, body);
         }
 
@@ -220,13 +215,13 @@ namespace PipServices.Oss.Prometheus
         {
             var counters = new List<Counter>
             {
-                new Counter("MyEndPoint1.MyCommand1.exec_time", CounterType.LastValue)
+                new Counter("MyService1.MyCommand1.exec_time", CounterType.LastValue)
                 {
                     Count = 2,
                     Last = 3,
                     Time = DateTime.MinValue
                 },
-                new Counter("MyEndPoint2.MyCommand2.exec_time", CounterType.LastValue)
+                new Counter("MyService2.MyCommand2.exec_time", CounterType.LastValue)
                 {
                     Count = 5,
                     Last = 10,
@@ -234,8 +229,8 @@ namespace PipServices.Oss.Prometheus
                 }
             };
             var body = PrometheusCounterConverter.ToString(counters, "MyApp", "MyInstance");
-            const string expected = "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint1\",command=\"MyCommand1\"} 3\n"
-                                    + "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",endpoint=\"MyEndPoint2\",command=\"MyCommand2\"} 10\n";
+            const string expected = "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService1\",command=\"MyCommand1\"} 3\n"
+                                    + "# TYPE exec_time gauge\nexec_time{source=\"MyApp\",instance=\"MyInstance\",service=\"MyService2\",command=\"MyCommand2\"} 10\n";
             Assert.Equal(expected, body);
         }
     }

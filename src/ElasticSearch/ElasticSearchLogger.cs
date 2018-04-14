@@ -15,8 +15,6 @@ namespace PipServices.Oss.ElasticSearch
 {
     public class ElasticSearchLogger : CachedLogger, IReferenceable, IOpenable
     {
-        //TODO: needed? this overrides base class "lock" 
-        private object _lock = new object();
         private FixedRateTimer _timer;
         private HttpConnectionResolver _connectionResolver = new HttpConnectionResolver();
         private ElasticLowLevelClient _client;

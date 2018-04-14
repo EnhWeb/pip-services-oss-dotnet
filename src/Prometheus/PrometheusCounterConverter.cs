@@ -17,8 +17,8 @@ namespace PipServices.Oss.Prometheus
 
             foreach (var counter in counters)
             {
-                var counterName = ParseCounterLabels(counter, source, instance, out var labelCollection);
-                var labels = GenerateCounterLabel(labelCollection);
+                var counterName = ParseCounterName(counter);
+                var labels = GenerateCounterLabel(counter, source, instance);
 
                 switch (counter.Type)
                 {
@@ -72,10 +72,26 @@ namespace PipServices.Oss.Prometheus
         /// <summary>
         /// Converts a collection of labels into something we can insert into the output to prometheus
         /// </summary>
-        /// <param name="labels">The collection of labels</param>
+        /// <param name="counter">The counter for which we are generating labels</param>
+        /// <param name="source">The source that generated the counter (usually app)</param>
+        /// <param name="instance">Typically the machine that generated the counter</param>
         /// <returns>A string presentation of the labels</returns>
-        private static string GenerateCounterLabel(IDictionary<string, string> labels)
+        private static string GenerateCounterLabel(Counter counter, string source, string instance)
         {
+            var labels = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(source)) labels["source"] = source;
+            if (!string.IsNullOrEmpty(instance)) labels["instance"] = instance;
+
+            var nameParts = counter.Name.Split('.');
+
+            // If there are other predictable names from which we can parse labels, we can add them below
+            if (nameParts.Length >= 3 && nameParts[2] == "exec_time")
+            {
+                labels["service"] = nameParts[0];
+                labels["command"] = nameParts[1];
+            }
+
             if (!labels.Any()) return string.Empty;
             var builder = new StringBuilder();
 
@@ -94,15 +110,37 @@ namespace PipServices.Oss.Prometheus
         /// Evaluates the counter name and returns the name to use and any potential labels
         /// </summary>
         /// <param name="counter">The counter to evaluate</param>
-        /// <param name="instance">Typically the machine this is running on</param>
-        /// <param name="labels">After execution, contains any prometheus labels to include</param>
-        /// <param name="source">Typically the application</param>
         /// <returns>The name of the counter to publish</returns>
-        private static string ParseCounterLabels(Counter counter, string source, string instance, out IDictionary<string, string> labels)
+        // TODO: split into two methods rather than use out param
+        private static string ParseCounterName(Counter counter)
         {
-            labels = new Dictionary<string, string>();
-            
             if (string.IsNullOrEmpty(counter.Name)) return string.Empty;
+
+            var nameParts = counter.Name.Split('.');
+
+            // If there are other predictable names from which we can parse labels, we can add them below
+            if (nameParts.Length >= 3 && nameParts[2] == "exec_time")
+            {
+                return nameParts[2];
+            }
+
+            // TODO: are there other assumptions we can make?
+            // Or just return as a single, valid name
+            return counter.Name.ToLowerInvariant()
+                .Replace(".", "_").Replace("/", "_");
+        }
+
+        /// <summary>
+        /// Returns any potential labels
+        /// </summary>
+        /// <param name="counter">The counter to evaluate</param>
+        /// <param name="instance">Typically the machine this is running on</param>
+        /// <param name="source">Typically the application</param>
+        /// <returns>An IDictionary populated with any labels to use with the counter</returns>
+        // TODO: split into two methods rather than use out param
+        private static IDictionary<string, string> ParseCounterLabels(Counter counter, string source, string instance)
+        {
+            var labels = new Dictionary<string, string>();
 
             if (!string.IsNullOrEmpty(source)) labels["source"] = source;
             if (!string.IsNullOrEmpty(instance)) labels["instance"] = instance;
@@ -112,15 +150,11 @@ namespace PipServices.Oss.Prometheus
             // If there are other predictable names from which we can parse labels, we can add them below
             if (nameParts.Length >= 3 && nameParts[2] == "exec_time")
             {
-                labels["endpoint"] = nameParts[0];
+                labels["service"] = nameParts[0];
                 labels["command"] = nameParts[1];
-                return nameParts[2];
             }
 
-            // TODO: are there other assumptions we can make?
-            // Or just return as a single, valid name
-            return counter.Name.ToLowerInvariant()
-                .Replace(".", "_").Replace("/", "_");
+            return labels;
         }
     }
 }
