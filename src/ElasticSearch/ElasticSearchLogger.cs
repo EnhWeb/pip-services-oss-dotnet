@@ -162,7 +162,7 @@ namespace PipServices.Oss.ElasticSearch
 
         protected override void Save(List<LogMessage> messages)
         {
-            // if (messages.Count == 0) return;
+            if (messages == null || messages.Count == 0) return;
 
             if (_client == null)
                 throw new InvalidStateException("elasticsearch_logger", "NOT_OPENED", "ElasticSearchLogger is not opened");
@@ -174,11 +174,11 @@ namespace PipServices.Oss.ElasticSearch
                 var bulk = new List<string>();
                 foreach (var message in messages)
                 {
-                    bulk.Add(JsonConverter.ToJson(new { index = new { _index = "log", _type = "log_message", _id = IdGenerator.NextLong() } }));
+                    bulk.Add(JsonConverter.ToJson(new { index = new { _index = _currentIndexName, _type = "log_message", _id = IdGenerator.NextLong() } }));
                     bulk.Add(JsonConverter.ToJson(message));
                 }
 
-                var response = _client.Bulk<StringResponse>(_currentIndexName, "log_message", PostData.MultiJson(bulk));
+                var response = _client.Bulk<StringResponse>(PostData.MultiJson(bulk));
                 if (!response.Success)
                     throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
             }
