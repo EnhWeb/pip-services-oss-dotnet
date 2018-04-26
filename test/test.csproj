@@ -41,9 +41,6 @@
     <Compile Remove="Run\TestClass.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Fixtures\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Update="xunit.runner.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

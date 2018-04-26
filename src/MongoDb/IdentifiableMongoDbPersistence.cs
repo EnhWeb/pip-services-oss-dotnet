@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using PipServices.Commons.Config;
+using PipServices.Commons.Convert;
 using PipServices.Commons.Data;
 using PipServices.Commons.Reflect;
 using PipServices.Data;
@@ -53,6 +57,51 @@ namespace PipServices.Oss.MongoDb
             };
         }
 
+        public async Task<DataPage<object>> GetPageByFilterAndProjectionAsync(string correlationId, FilterDefinition<T> filterDefinition,
+            PagingParams paging = null, SortDefinition<T> sortDefinition = null, ProjectionParams projection = null)
+        {
+            var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
+            var renderedFilter = filterDefinition.Render(documentSerializer, BsonSerializer.SerializerRegistry);
+
+            var query = _collection.Find(filterDefinition);
+            if (sortDefinition != null)
+            {
+                query = query.Sort(sortDefinition);
+            }
+
+            projection = projection ?? new ProjectionParams();
+            var projectionBuilder = Builders<T>.Projection;
+            var projectionDefinition = projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
+
+            paging = paging ?? new PagingParams();
+            var skip = paging.GetSkip(0);
+            var take = paging.GetTake(_maxPageSize);
+
+            var count = paging.Total ? (long?)await query.CountAsync() : null;
+            var items = await query.Project(projectionDefinition).Skip((int)skip).Limit((int)take).ToListAsync();
+
+            var result = new DataPage<object>()
+            {
+                Data = new List<object>(),
+                Total = count
+            };
+
+            foreach (var item in items)
+            {
+                // Maybe we could do another check if item is empty?
+                if (item.Elements.Count() > 0)
+                {
+                    result.Data.Add(JsonConverter.FromJson<ExpandoObject>(item.ToJson()));
+                }
+            }
+
+            result.Total = result.Data.Count;
+
+            _logger.Trace(correlationId, $"Retrieved {result.Total} from {_collection} with projection fields = '{StringConverter.ToString(projection)}'");
+
+            return result;
+        }
+
         public async Task<List<T>> GetListByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition,
             SortDefinition<T> sortDefinition = null)
         {
@@ -93,9 +142,38 @@ namespace PipServices.Oss.MongoDb
             var filter = builder.Eq(x => x.Id, id);
             var result = await _collection.Find(filter).FirstOrDefaultAsync();
 
+            if (result == null)
+            {
+                _logger.Trace(correlationId, "Nothing found from {0} with id = {1}", _collectionName, id);
+                return default(T);
+            }
+
             _logger.Trace(correlationId, "Retrieved from {0} with id = {1}", _collectionName, id);
 
             return result;
+        }
+
+        public async Task<object> GetOneByIdAsync(string correlationId, K id, ProjectionParams projection)
+        {
+            var builder = Builders<T>.Filter;
+            var filter = builder.Eq(x => x.Id, id);
+
+            projection = projection ?? new ProjectionParams();
+            var projectionBuilder = Builders<T>.Projection;
+            var projectionDefinition = projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
+
+            var result = await _collection.Find(filter).Project(projectionDefinition).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                _logger.Trace(correlationId, "Nothing found from {0} with id = {1} and projection fields '{2}'", _collectionName, id, StringConverter.ToString(projection));
+                return null;
+            }
+
+            _logger.Trace(correlationId, "Retrieved from {0} with id = {1} and projection fields '{2}'", _collectionName, id, StringConverter.ToString(projection));
+
+            // convert result to dynamic object
+            return JsonConverter.FromJson<ExpandoObject>(result.ToJson());
         }
 
         public async Task<T> GetOneRandomAsync(string correlationId, FilterDefinition<T> filterDefinition)

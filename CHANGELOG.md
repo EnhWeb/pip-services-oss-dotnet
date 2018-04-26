@@ -1,9 +1,10 @@
 # Open source components for Pip.Services in .NET Changelog
 
-## <a name="1.1.0"></a> 1.1.0 (2018-03-26)
+## <a name="1.1.0-1.1.9"></a> 1.1.0-1.1.9 (2018-04-26)
 
 ### Features
-* Added PrometheusCounters and PrometheusMetrisService
+* **mongodb** Integrated with projections
+* **prometheus** Added PrometheusCounters and PrometheusMetrisService
 
 ## <a name="1.0.0"></a> 1.0.0 (2018-03-21)
 

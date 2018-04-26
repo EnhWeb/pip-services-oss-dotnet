@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using PipServices.Commons.Data;
-using PipServices.Commons.Refer;
-using PipServices.Commons.Config;
-using PipServices.Commons.Run;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Xunit;
-using PipServices.Data;
+
+using PipServices.Commons.Data;
+using PipServices.Oss.MongoDb;
+
+using MongoDB.Driver;
 
 namespace PipServices.Oss.Fixtures
 {
@@ -17,7 +18,11 @@ namespace PipServices.Oss.Fixtures
         private readonly Dummy _dummy1 = new Dummy
         {
             Key = "Key 1",
-            Content = "Content 1"
+            Content = "Content 1",
+            InnerDummy = new InnerDummy()
+            {
+                Description = "Inner Dummy Description"
+            }
         };
 
         private readonly Dummy _dummy2 = new Dummy
@@ -26,47 +31,19 @@ namespace PipServices.Oss.Fixtures
             Content = "Content 2"
         };
 
-        private readonly IReferenceable _refs;
-        private readonly IConfigurable _conf;
-        private readonly IOpenable _open;
-        private readonly IClosable _close;
-        private readonly ICleanable _clean;
-        private readonly IWriter<Dummy,string> _write;
-        private readonly IGetter<Dummy,string> _get;
-        private readonly ISetter<Dummy> _set;
+        private readonly IdentifiableMongoDbPersistence<Dummy, string> _persistence;
 
-        public PersistenceFixture(IReferenceable refs, IConfigurable conf, IOpenable open, IClosable close, ICleanable clean,
-            IWriter<Dummy, string> write, IGetter<Dummy, string> get, ISetter<Dummy> set)
+        public PersistenceFixture(IdentifiableMongoDbPersistence<Dummy, string> persistence)
         {
-            Assert.NotNull(refs);
-            _refs = refs;
+            Assert.NotNull(persistence);
 
-            Assert.NotNull(conf);
-            _conf = conf;
-
-            Assert.NotNull(open);
-            _open = open;
-
-            Assert.NotNull(close);
-            _close = close;
-
-            Assert.NotNull(clean);
-            _clean = clean;
-
-            Assert.NotNull(write);
-            _write = write;
-
-            Assert.NotNull(get);
-            _get = get;
-
-            Assert.NotNull(set);
-            _set = set;
+            _persistence = persistence;
         }
 
         public async Task TestCrudOperationsAsync()
         {
             // Create one dummy
-            var dummy1 = await _write.CreateAsync(null, _dummy1);
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
 
             Assert.NotNull(dummy1);
             Assert.NotNull(dummy1.Id);
@@ -74,7 +51,7 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal(_dummy1.Content, dummy1.Content);
 
             // Create another dummy
-            var dummy2 = await _write.CreateAsync(null, _dummy2);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
 
             Assert.NotNull(dummy2);
             Assert.NotNull(dummy2.Id);
@@ -88,7 +65,7 @@ namespace PipServices.Oss.Fixtures
 
             // Update the dummy
             dummy1.Content = "Updated Content 1";
-            var dummy = await _write.UpdateAsync(null, dummy1);
+            var dummy = await _persistence.UpdateAsync(null, dummy1);
 
             Assert.NotNull(dummy);
             Assert.Equal(dummy1.Id, dummy.Id);
@@ -96,10 +73,10 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal(dummy1.Content, dummy.Content);
 
             // Delete the dummy
-            await _write.DeleteByIdAsync(null, dummy1.Id);
+            await _persistence.DeleteByIdAsync(null, dummy1.Id);
 
             // Try to get deleted dummy
-            dummy = await _get.GetOneByIdAsync(null, dummy1.Id);
+            dummy = await _persistence.GetOneByIdAsync(null, dummy1.Id);
             Assert.Null(dummy);
         }
 
@@ -117,7 +94,7 @@ namespace PipServices.Oss.Fixtures
             var count = 0;
             dummies.AsParallel().ForAll(async x =>
             {
-                await _write.CreateAsync(null, x);
+                await _persistence.CreateAsync(null, x);
                 Interlocked.Increment(ref count);
             });
 
@@ -137,7 +114,7 @@ namespace PipServices.Oss.Fixtures
 
                 // Update the dummy
                 x.Content = updatedContent;
-                var dummy = await _write.UpdateAsync(null, x);
+                var dummy = await _persistence.UpdateAsync(null, x);
 
                 Assert.NotNull(dummy);
                 Assert.Equal(x.Id, dummy.Id);
@@ -177,12 +154,149 @@ namespace PipServices.Oss.Fixtures
             //Assert.Equal(0, dummiesResponce.Total);
         }
 
+        public async Task TestGetByWrongIdAndProjection()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key");
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, "wrong_id", projection);
+
+            // assert
+            Assert.Null(result);
+        }
+
+        public async Task TestGetByIdAndProjection()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key");
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Key, result.Key);
+            Assert.Equal(dummy.Content, result.Content);
+            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
+        }
+
+        public async Task TestGetByIdAndEmptyProjection()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromValues(null);
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Key, result.Key);
+            Assert.Equal(dummy.Content, result.Content);
+            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
+        }
+
+        public async Task TestGetByIdAndNullProjection()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, null);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Key, result.Key);
+            Assert.Equal(dummy.Content, result.Content);
+            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
+        }
+
+        public async Task TestGetPageByFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            // act
+            var result = await _persistence.GetPageByFilterAsync(null, filter);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Data.Count);
+        }
+
+        public async Task TestGetPageByProjection()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key");
+
+            // act
+            dynamic result = await _persistence.GetPageByFilterAndProjectionAsync(null, filter, null, null, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Data.Count);
+            Assert.Equal(dummy1.Key, result.Data[0].Key);
+            Assert.Equal(dummy1.Content, result.Data[0].Content);
+            Assert.Equal(dummy1.InnerDummy.Description, result.Data[0].InnerDummy.Description);
+            Assert.Equal(dummy2.Key, result.Data[1].Key);
+            Assert.Equal(dummy2.Content, result.Data[1].Content);
+        }
+
+        public async Task TestGetPageByNullProjection()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            // act
+            var result = await _persistence.GetPageByFilterAndProjectionAsync(null, filter);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Data.Count);
+        }
+
+        public async Task TestGetPageByWrongProjection()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            var projection = ProjectionParams.FromValues("Wrong_InnerDummy.Description", "Wrong_Content", "Wrong_Key");
+
+            // act
+            dynamic result = await _persistence.GetPageByFilterAndProjectionAsync(null, filter, null, null, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Empty(result.Data);
+        }
+
         private async Task AssertDelete(Dummy dummy)
         {
-            await _write.DeleteByIdAsync(null, dummy.Id);
+            await _persistence.DeleteByIdAsync(null, dummy.Id);
 
             // Try to get deleted dummy
-            var result = await _get.GetOneByIdAsync(null, dummy.Id);
+            var result = await _persistence.GetOneByIdAsync(null, dummy.Id);
             Assert.Null(result);
         }
     }

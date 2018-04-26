@@ -34,7 +34,7 @@ namespace PipServices.Oss.MongoDb
             Db.OpenAsync(null).Wait();
             Db.ClearAsync(null).Wait();
 
-            Fixture = new PersistenceFixture(Db, Db, Db, Db, Db, Db, Db, Db);
+            Fixture = new PersistenceFixture(Db);
         }
 
         [Fact]
@@ -47,6 +47,54 @@ namespace PipServices.Oss.MongoDb
         public void TestMultithreading()
         {
             Fixture?.TestMultithreading().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Not_Get_By_Wrong_Id_And_Projection()
+        {
+            Fixture?.TestGetByWrongIdAndProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_By_Id_And_Projection()
+        {
+            Fixture?.TestGetByIdAndProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_By_Id_And_Empty_Projection()
+        {
+            Fixture?.TestGetByIdAndEmptyProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_By_Id_And_Null_Projection()
+        {
+            Fixture?.TestGetByIdAndNullProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Page_By_Filter()
+        {
+            Fixture?.TestGetPageByFilter().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Page_By_Projection()
+        {
+            Fixture?.TestGetPageByProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Page_By_Null_Projection()
+        {
+            Fixture?.TestGetPageByNullProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Not_Get_Page_By_Wrong_Projection()
+        {
+            Fixture?.TestGetPageByWrongProjection().Wait();
         }
 
         public void Dispose()

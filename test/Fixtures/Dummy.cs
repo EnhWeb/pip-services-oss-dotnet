@@ -8,5 +8,6 @@ namespace PipServices.Oss.Fixtures
         public string Id { get; set; }
         public string Key { get; set; }
         public string Content { get; set; }
+        public InnerDummy InnerDummy { get; set; }
     }
 }
