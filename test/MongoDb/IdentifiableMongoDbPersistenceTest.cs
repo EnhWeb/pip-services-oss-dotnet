@@ -62,9 +62,9 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
-        public void It_Should_Get_By_Id_And_Empty_Projection()
+        public void It_Should_Get_By_Id_And_Wrong_Projection()
         {
-            Fixture?.TestGetByIdAndEmptyProjection().Wait();
+            Fixture?.TestGetByIdAndWrongProjection().Wait();
         }
 
         [Fact]

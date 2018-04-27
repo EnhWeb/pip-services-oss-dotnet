@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+
 using PipServices.Commons.Config;
 using PipServices.Commons.Convert;
 using PipServices.Commons.Data;
@@ -91,7 +94,10 @@ namespace PipServices.Oss.MongoDb
                 // Maybe we could do another check if item is empty?
                 if (item.Elements.Count() > 0)
                 {
-                    result.Data.Add(JsonConverter.FromJson<ExpandoObject>(item.ToJson()));
+                    // Convert to JSON to fix issue with ISODate
+                    var jsonString = JsonConverter.ToJson(BsonTypeMapper.MapToDotNetValue(item));
+
+                    result.Data.Add(JsonConverter.FromJson<ExpandoObject>(jsonString));
                 }
             }
 
@@ -170,10 +176,19 @@ namespace PipServices.Oss.MongoDb
                 return null;
             }
 
+            if (result.Elements.Count() == 0)
+            {
+                _logger.Trace(correlationId, "Retrieved from {0} with id = {1}, but projection is not valid '{2}'", _collectionName, id, StringConverter.ToString(projection));
+                return null;
+            }
+
             _logger.Trace(correlationId, "Retrieved from {0} with id = {1} and projection fields '{2}'", _collectionName, id, StringConverter.ToString(projection));
 
+            // Convert to JSON to fix issue with ISODate
+            var jsonString = JsonConverter.ToJson(BsonTypeMapper.MapToDotNetValue(result));
+
             // convert result to dynamic object
-            return JsonConverter.FromJson<ExpandoObject>(result.ToJson());
+            return JsonConverter.FromJson<ExpandoObject>(jsonString);
         }
 
         public async Task<T> GetOneRandomAsync(string correlationId, FilterDefinition<T> filterDefinition)
