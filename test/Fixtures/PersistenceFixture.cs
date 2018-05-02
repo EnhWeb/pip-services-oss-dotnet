@@ -295,6 +295,51 @@ namespace PipServices.Oss.Fixtures
             Assert.Empty(result.Data);
         }
 
+        public async Task TestModifyExistingPropertiesBySelectedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            var updateDefinition = Builders<Dummy>.Update
+                .Set("Content", "Modified Content")
+                .Set("InnerDummy.Description", "Modified InnerDummy Description");
+
+            // act
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, updateDefinition);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal("Modified Content", result.Content);
+            Assert.Equal("Modified InnerDummy Description", result.InnerDummy.Description);
+        }
+
+        public async Task TestModifyNullPropertiesBySelectedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy2);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            var updateDefinition = Builders<Dummy>.Update
+                .Set("Content", "Modified Content")
+                .Set("InnerDummy", new InnerDummy() { Description = "Modified InnerDummy Description" });
+
+            // act
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, updateDefinition);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Null(dummy.InnerDummy);
+            Assert.Equal("Modified Content", result.Content);
+            Assert.Equal("Modified InnerDummy Description", result.InnerDummy.Description);
+        }
+
         private async Task AssertDelete(Dummy dummy)
         {
             await _persistence.DeleteByIdAsync(null, dummy.Id);
