@@ -303,12 +303,14 @@ namespace PipServices.Oss.Fixtures
             var builder = Builders<Dummy>.Filter;
             var filter = builder.Empty;
 
-            var updateDefinition = Builders<Dummy>.Update
-                .Set("Content", "Modified Content")
-                .Set("InnerDummy.Description", "Modified InnerDummy Description");
+            var updateMap = new AnyValueMap()
+            {
+                { "Content", "Modified Content" },
+                { "InnerDummy.Description", "Modified InnerDummy Description" }
+            };
 
             // act
-            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, updateDefinition);
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, ComposeUpdate(updateMap));
 
             // assert
             Assert.NotNull(result);
@@ -325,12 +327,14 @@ namespace PipServices.Oss.Fixtures
             var builder = Builders<Dummy>.Filter;
             var filter = builder.Empty;
 
-            var updateDefinition = Builders<Dummy>.Update
-                .Set("Content", "Modified Content")
-                .Set("InnerDummy", new InnerDummy() { Description = "Modified InnerDummy Description" });
+            var updateMap = new AnyValueMap()
+            {
+                { "Content", "Modified Content" },
+                { "InnerDummy", new InnerDummy() { Description = "Modified InnerDummy Description" } }
+            };
 
             // act
-            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, updateDefinition);
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, ComposeUpdate(updateMap));
 
             // assert
             Assert.NotNull(result);
@@ -347,6 +351,21 @@ namespace PipServices.Oss.Fixtures
             // Try to get deleted dummy
             var result = await _persistence.GetOneByIdAsync(null, dummy.Id);
             Assert.Null(result);
+        }
+
+        private UpdateDefinition<Dummy> ComposeUpdate(AnyValueMap updateMap)
+        {
+            updateMap = updateMap ?? new AnyValueMap();
+
+            var builder = Builders<Dummy>.Update;
+            var updateDefinitions = new List<UpdateDefinition<Dummy>>();
+
+            foreach (var key in updateMap.Keys)
+            {
+                updateDefinitions.Add(builder.Set(key, updateMap[key]));
+            }
+
+            return builder.Combine(updateDefinitions);
         }
     }
 }
