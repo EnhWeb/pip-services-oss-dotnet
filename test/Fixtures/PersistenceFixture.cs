@@ -24,7 +24,33 @@ namespace PipServices.Oss.Fixtures
             {
                 Description = "Inner Dummy Description"
             },
-            DummyType = DummyType.NotDummy
+            DummyType = DummyType.NotDummy,
+            InnerDummies = new List<InnerDummy>()
+            {
+                new InnerDummy
+                {
+                    Id = "1",
+                    Name = "InnerDummy #1"
+                },
+                new InnerDummy
+                {
+                    Id = "2",
+                    Name = "InnerDummy #2"
+                },
+                new InnerDummy
+                {
+                    Id = "3",
+                    Name = "InnerDummy #3",
+                    InnerInnerDummies = new List<InnerDummy>()
+                    {
+                        new InnerDummy()
+                        {
+                            Id = "100",
+                            Name = "InnerInner Dummy#1"
+                        }
+                    }
+                }
+            }
         };
 
         private readonly Dummy _dummy2 = new Dummy
@@ -300,9 +326,6 @@ namespace PipServices.Oss.Fixtures
             // arrange 
             var dummy = await _persistence.CreateAsync(null, _dummy1);
 
-            var builder = Builders<Dummy>.Filter;
-            var filter = builder.Empty;
-
             var updateMap = new AnyValueMap()
             {
                 { "Content", "Modified Content" },
@@ -324,9 +347,6 @@ namespace PipServices.Oss.Fixtures
             // arrange 
             var dummy = await _persistence.CreateAsync(null, _dummy2);
 
-            var builder = Builders<Dummy>.Filter;
-            var filter = builder.Empty;
-
             var updateMap = new AnyValueMap()
             {
                 { "Content", "Modified Content" },
@@ -342,6 +362,37 @@ namespace PipServices.Oss.Fixtures
             Assert.Null(dummy.InnerDummy);
             Assert.Equal("Modified Content", result.Content);
             Assert.Equal("Modified InnerDummy Description", result.InnerDummy.Description);
+        }
+
+        public async Task TestModifyNestedCollectionBySelectedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            var updateTuples = new Tuple<string, string, string, string>[]
+            {
+                Tuple.Create("InnerDummies.Id", "1", "InnerDummies.$.Name", "Modified Name"),
+                Tuple.Create("InnerDummies.2.InnerInnerDummies.Id", "100", "InnerDummies.2.InnerInnerDummies.$.Name", "Modified Inner Inner Name"),
+            };
+
+            // act 1
+            var result = await _persistence.ModifyAsync(null, ComposeUpdateFilter(dummy.Id, updateTuples[0]), ComposeUpdate(updateTuples[0]));
+
+            // assert 1
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal("Modified Name", result.InnerDummies[0].Name);
+
+            // act 2
+            result = await _persistence.ModifyAsync(null, ComposeUpdateFilter(dummy.Id, updateTuples[1]), ComposeUpdate(updateTuples[1]));
+
+            // assert 2
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal("Modified Inner Inner Name", result.InnerDummies[2].InnerInnerDummies[0].Name);
         }
 
         private async Task AssertDelete(Dummy dummy)
@@ -364,6 +415,31 @@ namespace PipServices.Oss.Fixtures
             {
                 updateDefinitions.Add(builder.Set(key, updateMap[key]));
             }
+
+            return builder.Combine(updateDefinitions);
+        }
+
+        private FilterDefinition<Dummy> ComposeUpdateFilter(string id, Tuple<string, string, string, string> updateTuple)
+        {
+            var builder = Builders<Dummy>.Filter;
+            var filter = Builders<Dummy>.Filter.Eq(x => x.Id, id);
+
+            filter &= builder.Eq(updateTuple.Item1, updateTuple.Item2);
+
+            return filter;
+        }
+
+        private UpdateDefinition<Dummy> ComposeUpdate(Tuple<string, string, string, string> updateTuple)
+        {
+            var builder = Builders<Dummy>.Update;
+            var updateDefinitions = new List<UpdateDefinition<Dummy>>();
+
+            if (updateTuple == null)
+            {
+                builder.Combine(updateDefinitions);
+            }
+
+            updateDefinitions.Add(builder.Set(updateTuple.Item3, updateTuple.Item4));
 
             return builder.Combine(updateDefinitions);
         }

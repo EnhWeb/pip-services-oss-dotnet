@@ -264,13 +264,26 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        /// <summary>
-        /// Modifies the by identifier asynchronous.
-        /// </summary>
-        /// <param name="correlationId">The correlation identifier.</param>
-        /// <param name="id">The identifier.</param>
-        /// <param name="updateDefinition">The update definition.</param>
-        /// <returns></returns>
+        public async Task<T> ModifyAsync(string correlationId, FilterDefinition<T> filterDefinition, UpdateDefinition<T> updateDefinition)
+        {
+            if (filterDefinition == null || updateDefinition == null)
+            {
+                return default(T);
+            }
+
+            var options = new FindOneAndUpdateOptions<T>
+            {
+                ReturnDocument = ReturnDocument.After,
+                IsUpsert = false
+            };
+
+            var result = await _collection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, options);
+
+            _logger.Trace(correlationId, "Modify in {0}", _collectionName);
+
+            return result;
+        }
+
         public async Task<T> ModifyByIdAsync(string correlationId, K id, UpdateDefinition<T> updateDefinition)
         {
             if (id == null || updateDefinition == null)
@@ -278,14 +291,7 @@ namespace PipServices.Oss.MongoDb
                 return default(T);
             }
 
-            var filter = Builders<T>.Filter.Eq(x => x.Id, id);
-            var options = new FindOneAndUpdateOptions<T>
-            {
-                ReturnDocument = ReturnDocument.After,
-                IsUpsert = false
-            };
-
-            var result = await _collection.FindOneAndUpdateAsync(filter, updateDefinition, options);
+            var result = await ModifyAsync(correlationId, Builders<T>.Filter.Eq(x => x.Id, id), updateDefinition);
 
             _logger.Trace(correlationId, "Modify in {0} with id = {1}", _collectionName, id);
 

@@ -109,6 +109,12 @@ namespace PipServices.Oss.MongoDb
             Fixture?.TestModifyExistingPropertiesBySelectedFields().Wait();
         }
 
+        [Fact]
+        public void It_Should_Modify_Nested_Collection_By_Selected_Fields()
+        {
+            Fixture?.TestModifyNestedCollectionBySelectedFields().Wait();
+        }
+
         public void Dispose()
         {
             Db?.CloseAsync(null).Wait();
