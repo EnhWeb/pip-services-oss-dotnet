@@ -215,6 +215,23 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal(dummy.DummyType.ToString(), result.DummyType.ToString());
         }
 
+        public async Task TestGetByIdAndProjectionFromArray()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromGroupedValues("Key", "InnerDummies(Name, Description)");
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Key, result.Key);
+            Assert.Equal(dummy.InnerDummies.Count, result.InnerDummies.Count);
+            Assert.Equal(dummy.InnerDummies[0].Name, result.InnerDummies[0].Name);
+            Assert.Equal(dummy.InnerDummies[1].Description, result.InnerDummies[1].Description);
+        }
+
         public async Task TestGetByIdAndWrongProjection()
         {
             // arrange
@@ -395,6 +412,22 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal("Modified Inner Inner Name", result.InnerDummies[2].InnerInnerDummies[0].Name);
         }
 
+        public async Task TestSearchWithinNestedCollectionByFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var filterParams = ExtractFilterParams("InnerDummies.Name:InnerDummy #2");
+
+            // act
+            var result = await _persistence.GetPageByFilterAsync(null, ComposeFilter(filterParams));
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+        }
+
         private async Task AssertDelete(Dummy dummy)
         {
             await _persistence.DeleteByIdAsync(null, dummy.Id);
@@ -442,6 +475,37 @@ namespace PipServices.Oss.Fixtures
             updateDefinitions.Add(builder.Set(updateTuple.Item3, updateTuple.Item4));
 
             return builder.Combine(updateDefinitions);
+        }
+
+        private FilterDefinition<Dummy> ComposeFilter(FilterParams filterParams)
+        {
+            filterParams = filterParams ?? new FilterParams();
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+            foreach (var filterKey in filterParams.Keys)
+            {
+                filter &= builder.Eq(filterKey, filterParams[filterKey]);
+            }
+
+            return filter;
+        }
+
+        private FilterParams ExtractFilterParams(string query)
+        {
+            FilterParams filterParams = new FilterParams();
+
+            foreach (var filterParameter in query.Split(','))
+            {
+                var keyValue = filterParameter.Split(':');
+
+                if (keyValue.Length == 2)
+                {
+                    filterParams[keyValue[0]] = keyValue[1];
+                }
+            }
+
+            return filterParams;
         }
     }
 }

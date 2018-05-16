@@ -62,6 +62,12 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
+        public void It_Should_Get_By_Id_And_Projection_From_Array()
+        {
+            Fixture?.TestGetByIdAndProjectionFromArray().Wait();
+        }
+
+        [Fact]
         public void It_Should_Get_By_Id_And_Wrong_Projection()
         {
             Fixture?.TestGetByIdAndWrongProjection().Wait();
@@ -113,6 +119,12 @@ namespace PipServices.Oss.MongoDb
         public void It_Should_Modify_Nested_Collection_By_Selected_Fields()
         {
             Fixture?.TestModifyNestedCollectionBySelectedFields().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Search_Within_Nested_Collection_Filter()
+        {
+            Fixture?.TestSearchWithinNestedCollectionByFilter().Wait();
         }
 
         public void Dispose()
