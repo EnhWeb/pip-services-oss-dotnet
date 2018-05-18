@@ -219,7 +219,7 @@ namespace PipServices.Oss.Fixtures
         {
             // arrange
             var dummy = await _persistence.CreateAsync(null, _dummy1);
-            var projection = ProjectionParams.FromGroupedValues("Key", "InnerDummies(Name, Description)");
+            var projection = ProjectionParams.FromValues("Key", "InnerDummies(Name, Description)");
 
             // act
             dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);

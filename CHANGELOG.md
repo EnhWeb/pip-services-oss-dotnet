@@ -1,6 +1,6 @@
 # Open source components for Pip.Services in .NET Changelog
 
-## <a name="1.1.0-1.1.12"></a> 1.1.0-1.1.12 (2018-05-10)
+## <a name="1.1.0-1.1.13"></a> 1.1.0-1.1.13 (2018-05-17)
 
 ### Features
 * **mongodb** Integrated with projections

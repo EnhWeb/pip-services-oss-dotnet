@@ -21,7 +21,7 @@
     <PackageReference Include="MongoDB.Driver" Version="2.5.0" />
     <PackageReference Include="Elasticsearch.Net" Version="6.0.2" />
     <PackageReference Include="PipServices.Data" Version="2.3.0" />
-    <PackageReference Include="PipServices.Commons" Version="2.3.11" />
+    <PackageReference Include="PipServices.Commons" Version="2.3.12" />
     <PackageReference Include="PipServices.Net" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
