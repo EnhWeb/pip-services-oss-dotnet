@@ -80,6 +80,12 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
+        public void It_Should_Get_By_Id_And_Id_Projection()
+        {
+            Fixture?.TestGetByIdAndIdProjection().Wait();
+        }
+
+        [Fact]
         public void It_Should_Get_Page_By_Filter()
         {
             Fixture?.TestGetPageByFilter().Wait();

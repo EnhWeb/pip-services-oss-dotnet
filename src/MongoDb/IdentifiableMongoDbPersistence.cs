@@ -74,7 +74,7 @@ namespace PipServices.Oss.MongoDb
 
             projection = projection ?? new ProjectionParams();
             var projectionBuilder = Builders<T>.Projection;
-            var projectionDefinition = projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
+            var projectionDefinition = CreateProjectionDefinition(projection, projectionBuilder);
 
             paging = paging ?? new PagingParams();
             var skip = paging.GetSkip(0);
@@ -166,7 +166,7 @@ namespace PipServices.Oss.MongoDb
 
             projection = projection ?? new ProjectionParams();
             var projectionBuilder = Builders<T>.Projection;
-            var projectionDefinition = projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
+            var projectionDefinition = CreateProjectionDefinition(projection, projectionBuilder);
 
             var result = await _collection.Find(filter).Project(projectionDefinition).FirstOrDefaultAsync();
 
@@ -323,6 +323,16 @@ namespace PipServices.Oss.MongoDb
             var result = await _collection.DeleteManyAsync(filterDefinition);
 
             _logger.Trace(correlationId, $"Deleted {result.DeletedCount} from {_collection}");
+        }
+
+        private static ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
+        {
+            if (projection.Contains("id"))
+            {
+                return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field)));
+            }
+
+            return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
         }
 
     }

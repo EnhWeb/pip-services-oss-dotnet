@@ -260,6 +260,20 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
         }
 
+        public async Task TestGetByIdAndIdProjection()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromValues("id");
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result._id);
+        }
+
         public async Task TestGetPageByFilter()
         {
             // arrange 
