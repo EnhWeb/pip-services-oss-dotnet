@@ -8,8 +8,8 @@ namespace PipServices.Oss.MongoDb
 {
     public sealed class IdentifiableMongoDbPersistenceTest : IDisposable
     {
-        private static IdentifiableMongoDbPersistence<Dummy, string> Db { get; } 
-            = new IdentifiableMongoDbPersistence<Dummy, string>("dummies");
+        private static MongoDbDummyPersistence Db { get; }
+            = new MongoDbDummyPersistence();
         private static PersistenceFixture Fixture { get; set; }
 
         public IdentifiableMongoDbPersistenceTest()

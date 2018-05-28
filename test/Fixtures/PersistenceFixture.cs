@@ -10,6 +10,7 @@ using PipServices.Commons.Data;
 using PipServices.Oss.MongoDb;
 
 using MongoDB.Driver;
+using PipServices.Commons.Convert;
 
 namespace PipServices.Oss.Fixtures
 {
@@ -61,9 +62,9 @@ namespace PipServices.Oss.Fixtures
             DummyType = DummyType.Dummy
         };
 
-        private readonly IdentifiableMongoDbPersistence<Dummy, string> _persistence;
+        private readonly IDummyPersistence _persistence;
 
-        public PersistenceFixture(IdentifiableMongoDbPersistence<Dummy, string> persistence)
+        public PersistenceFixture(IDummyPersistence persistence)
         {
             Assert.NotNull(persistence);
 
@@ -188,7 +189,7 @@ namespace PipServices.Oss.Fixtures
         {
             // arrange
             var dummy = await _persistence.CreateAsync(null, _dummy1);
-            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key");
+            var projection = ProjectionParams.FromValues("inner_dummy.description", "content", "key");
 
             // act
             dynamic result = await _persistence.GetOneByIdAsync(null, "wrong_id", projection);
@@ -201,35 +202,34 @@ namespace PipServices.Oss.Fixtures
         {
             // arrange
             var dummy = await _persistence.CreateAsync(null, _dummy1);
-            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key", "CreateTimeUtc", "DummyType");
+            var projection = ProjectionParams.FromValues("inner_dummy.description", "content", "key", "create_time_utc", "dummy_type");
 
             // act
             dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Key, result.Key);
-            Assert.Equal(dummy.Content, result.Content);
-            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
-            Assert.Equal(dummy.CreateTimeUtc.ToString(), result.CreateTimeUtc.ToString());
-            Assert.Equal(dummy.DummyType.ToString(), result.DummyType.ToString());
+            Assert.Equal(dummy.Key, result.key);
+            Assert.Equal(dummy.Content, result.content);
+            Assert.Equal(dummy.InnerDummy.Description, result.inner_dummy.description);
+            Assert.Equal(dummy.CreateTimeUtc.ToString(), result.create_time_utc.ToString());
+            Assert.Equal(dummy.DummyType.ToString(), result.dummy_type.ToString());
         }
 
         public async Task TestGetByIdAndProjectionFromArray()
         {
             // arrange
             var dummy = await _persistence.CreateAsync(null, _dummy1);
-            var projection = ProjectionParams.FromValues("Key", "InnerDummies(Name, Description)");
+            var projection = ProjectionParams.FromValues("key", "inner_dummies(name, description)");
 
             // act
             dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Key, result.Key);
-            Assert.Equal(dummy.InnerDummies.Count, result.InnerDummies.Count);
-            Assert.Equal(dummy.InnerDummies[0].Name, result.InnerDummies[0].Name);
-            Assert.Equal(dummy.InnerDummies[1].Description, result.InnerDummies[1].Description);
+            Assert.Equal(dummy.Key, result.key);
+            Assert.Equal(dummy.InnerDummies[0].Name, result.inner_dummies[0].name);
+            Assert.Equal(dummy.InnerDummies[1].Description, result.inner_dummies[1].description);
         }
 
         public async Task TestGetByIdAndWrongProjection()
@@ -255,9 +255,21 @@ namespace PipServices.Oss.Fixtures
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Key, result.Key);
-            Assert.Equal(dummy.Content, result.Content);
-            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
+
+            if (result is Dummy)
+            {
+                Assert.Equal(dummy.Id, (result as Dummy).Id);
+                Assert.Equal(dummy.Key, (result as Dummy).Key);
+                Assert.Equal(dummy.Content, (result as Dummy).Content);
+                Assert.Equal(dummy.InnerDummy.Description, (result as Dummy).InnerDummy.Description);
+            }
+            else
+            {
+                Assert.Equal(dummy.Id, result.id);
+                Assert.Equal(dummy.Key, result.key);
+                Assert.Equal(dummy.Content, result.content);
+                Assert.Equal(dummy.InnerDummy.Description, result.inner_dummy.description);
+            }
         }
 
         public async Task TestGetByIdAndIdProjection()
@@ -271,7 +283,7 @@ namespace PipServices.Oss.Fixtures
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Id, result._id);
+            Assert.Equal(dummy.Id, result.id);
         }
 
         public async Task TestGetPageByFilter()
@@ -300,7 +312,7 @@ namespace PipServices.Oss.Fixtures
             var builder = Builders<Dummy>.Filter;
             var filter = builder.Empty;
 
-            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key", "CreateTimeUtc");
+            var projection = ProjectionParams.FromValues("inner_dummy.description", "content", "key", "create_time_utc");
 
             // act
             dynamic result = await _persistence.GetPageByFilterAndProjectionAsync(null, filter, null, null, projection);
@@ -308,12 +320,12 @@ namespace PipServices.Oss.Fixtures
             // assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Data.Count);
-            Assert.Equal(dummy1.Key, result.Data[0].Key);
-            Assert.Equal(dummy1.Content, result.Data[0].Content);
-            Assert.Equal(dummy1.InnerDummy.Description, result.Data[0].InnerDummy.Description);
-            Assert.Equal(dummy1.CreateTimeUtc.ToString(), result.Data[0].CreateTimeUtc.ToString());
-            Assert.Equal(dummy2.Key, result.Data[1].Key);
-            Assert.Equal(dummy2.Content, result.Data[1].Content);
+            Assert.Equal(dummy1.Key, result.Data[0].key);
+            Assert.Equal(dummy1.Content, result.Data[0].content);
+            Assert.Equal(dummy1.InnerDummy.Description, result.Data[0].inner_dummy.description);
+            Assert.Equal(dummy1.CreateTimeUtc.ToString(), result.Data[0].create_time_utc.ToString());
+            Assert.Equal(dummy2.Key, result.Data[1].key);
+            Assert.Equal(dummy2.Content, result.Data[1].content);
         }
 
         public async Task TestGetPageByNullProjection()
