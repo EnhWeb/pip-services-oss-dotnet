@@ -1,8 +1,9 @@
 # Open source components for Pip.Services in .NET Changelog
 
-## <a name="1.1.0-1.1.14"></a> 1.1.0-1.1.14 (2018-05-23)
+## <a name="1.1.0-1.1.15"></a> 1.1.0-1.1.15 (2018-05-28)
 
 ### Features
+* **mockdb** Added base mock persistence 
 * **mongodb** Integrated with projections
 * **prometheus** Added PrometheusCounters and PrometheusMetrisService
 
