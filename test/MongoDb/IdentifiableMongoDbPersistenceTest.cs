@@ -133,6 +133,12 @@ namespace PipServices.Oss.MongoDb
             Fixture?.TestSearchWithinNestedCollectionByFilter().Wait();
         }
 
+        [Fact]
+        public void It_Should_Get_Page_By_Ids_Filter()
+        {
+            Fixture?.TestGetPageByIdsFilter().Wait();
+        }
+
         public void Dispose()
         {
             Db?.CloseAsync(null).Wait();

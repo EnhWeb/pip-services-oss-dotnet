@@ -338,7 +338,7 @@ namespace PipServices.Oss.MongoDb
             {
                 if (filterKey.Equals("ids"))
                 {
-                    filter &= builder.In(IdentifiableFieldName, ToStringArray(filterParams.GetAsNullableString("ids")));
+                    filter &= builder.In(s => s.Id, ToKArray(filterParams.GetAsNullableString("ids")));
                     continue;
                 }
 
@@ -394,15 +394,15 @@ namespace PipServices.Oss.MongoDb
             return expandoObject;
         }
 
-        private static string[] ToStringArray(string value)
+        private static K[] ToKArray(string value)
         {
             if (value == null)
             {
                 return null;
             }
 
-            string[] items = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            return items.Length > 0 ? items : null;
+            var items = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) as K[];
+            return (items != null && items.Length > 0) ? items : null;
         }
 
         #endregion

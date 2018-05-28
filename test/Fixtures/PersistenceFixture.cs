@@ -454,6 +454,24 @@ namespace PipServices.Oss.Fixtures
             Assert.Single(result.Data);
         }
 
+        public async Task TestGetPageByIdsFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var filter = FilterParams.FromTuples(
+                "ids", $"1234567890,{dummy1.Id}"
+            );
+
+            // act
+            var result = await _persistence.GetAsync(null, filter, null, null);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+        }
+
         private async Task AssertDelete(Dummy dummy)
         {
             await _persistence.DeleteByIdAsync(null, dummy.Id);
