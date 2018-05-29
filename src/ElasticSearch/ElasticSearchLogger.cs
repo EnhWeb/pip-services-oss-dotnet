@@ -52,11 +52,11 @@ namespace PipServices.Oss.ElasticSearch
         {
             if (IsOpened()) return;
 
+            var connection = await _connectionResolver.ResolveAsync(correlationId);
+            var uri = new Uri(connection.Uri);
+
             try
             {
-                var connection = await _connectionResolver.ResolveAsync(correlationId);
-                var uri = new Uri(connection.Uri);
-
                 // Create client
                 var settings = new ConnectionConfiguration(uri)
                     .RequestTimeout(TimeSpan.FromMinutes(2))
@@ -75,7 +75,7 @@ namespace PipServices.Oss.ElasticSearch
             catch
             {
                 // Do nothing if elastic search client was not initialized
-                _errorConsoleLogger.Error(correlationId, "Failed to initialize Elastic Search Logger.");
+                _errorConsoleLogger.Error(correlationId, $"Failed to initialize Elastic Search Logger with uri='{uri}'");
             }
         }
 
