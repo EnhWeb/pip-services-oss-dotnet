@@ -72,10 +72,10 @@ namespace PipServices.Oss.ElasticSearch
                     _timer.Start();
                 }
             }
-            catch (Exception exception)
+            catch
             {
                 // Do nothing if elastic search client was not initialized
-                _errorConsoleLogger.Error(correlationId, exception, "Failed to initialize Elastic Search Logger.");
+                _errorConsoleLogger.Error(correlationId, "Failed to initialize Elastic Search Logger.");
             }
         }
 
@@ -202,9 +202,10 @@ namespace PipServices.Oss.ElasticSearch
                         throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
                     }
                 }
-                catch (Exception exception)
+                catch
                 {
-                    _errorConsoleLogger.Error(null, exception, "Failed to bulk messages with Elastic Search Logger.");
+                    // Do nothing if elastic search client was not enable to process bulk of messages
+                    _errorConsoleLogger.Error(null, "Failed to bulk messages with Elastic Search Logger.");
                 }
             }
         }

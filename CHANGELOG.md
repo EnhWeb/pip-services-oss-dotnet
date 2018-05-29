@@ -1,6 +1,6 @@
 # Open source components for Pip.Services in .NET Changelog
 
-## <a name="1.1.0-1.1.17"></a> 1.1.0-1.1.17 (2018-05-29)
+## <a name="1.1.0-1.1.18"></a> 1.1.0-1.1.18 (2018-05-29)
 
 ### Features
 * **mockdb** Added base mock persistence 
