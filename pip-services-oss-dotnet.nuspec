@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>PipServices.Oss</id>
-    <version>1.1.10</version>
+    <version>1.1.19</version>
     <title>PipServices.Oss</title>
     <authors>Sergey Seroukhov</authors>
     <projectUrl>https://github.com/pip-services/pip-services-oss-dotnet</projectUrl>

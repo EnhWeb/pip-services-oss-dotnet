@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
@@ -22,6 +21,9 @@ namespace PipServices.Oss.MongoDb
         where K : class
     {
         protected int _maxPageSize = 100;
+
+        private const string IdentifiableFieldName = "id";
+        private const string InternalIdFieldName = "_id";
 
         public IdentifiableMongoDbPersistence(string collectionName)
             : base(collectionName)
@@ -72,9 +74,8 @@ namespace PipServices.Oss.MongoDb
                 query = query.Sort(sortDefinition);
             }
 
-            projection = projection ?? new ProjectionParams();
             var projectionBuilder = Builders<T>.Projection;
-            var projectionDefinition = projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
+            var projectionDefinition = CreateProjectionDefinition(projection, projectionBuilder);
 
             paging = paging ?? new PagingParams();
             var skip = paging.GetSkip(0);
@@ -97,7 +98,7 @@ namespace PipServices.Oss.MongoDb
                     // Convert to JSON to fix issue with ISODate
                     var jsonString = JsonConverter.ToJson(BsonTypeMapper.MapToDotNetValue(item));
 
-                    result.Data.Add(JsonConverter.FromJson<ExpandoObject>(jsonString));
+                    result.Data.Add(UpdateIdField(JsonConverter.FromJson<ExpandoObject>(jsonString)));
                 }
             }
 
@@ -164,9 +165,8 @@ namespace PipServices.Oss.MongoDb
             var builder = Builders<T>.Filter;
             var filter = builder.Eq(x => x.Id, id);
 
-            projection = projection ?? new ProjectionParams();
             var projectionBuilder = Builders<T>.Projection;
-            var projectionDefinition = projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude("_id");
+            var projectionDefinition = CreateProjectionDefinition(projection, projectionBuilder);
 
             var result = await _collection.Find(filter).Project(projectionDefinition).FirstOrDefaultAsync();
 
@@ -188,7 +188,7 @@ namespace PipServices.Oss.MongoDb
             var jsonString = JsonConverter.ToJson(BsonTypeMapper.MapToDotNetValue(result));
 
             // convert result to dynamic object
-            return JsonConverter.FromJson<ExpandoObject>(jsonString);
+            return UpdateIdField(JsonConverter.FromJson<ExpandoObject>(jsonString));
         }
 
         public async Task<T> GetOneRandomAsync(string correlationId, FilterDefinition<T> filterDefinition)
@@ -264,6 +264,40 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
+        public async Task<T> ModifyAsync(string correlationId, FilterDefinition<T> filterDefinition, UpdateDefinition<T> updateDefinition)
+        {
+            if (filterDefinition == null || updateDefinition == null)
+            {
+                return default(T);
+            }
+
+            var options = new FindOneAndUpdateOptions<T>
+            {
+                ReturnDocument = ReturnDocument.After,
+                IsUpsert = false
+            };
+
+            var result = await _collection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, options);
+
+            _logger.Trace(correlationId, "Modify in {0}", _collectionName);
+
+            return result;
+        }
+
+        public async Task<T> ModifyByIdAsync(string correlationId, K id, UpdateDefinition<T> updateDefinition)
+        {
+            if (id == null || updateDefinition == null)
+            {
+                return default(T);
+            }
+
+            var result = await ModifyAsync(correlationId, Builders<T>.Filter.Eq(x => x.Id, id), updateDefinition);
+
+            _logger.Trace(correlationId, "Modify in {0} with id = {1}", _collectionName, id);
+
+            return result;
+        }
+
         public async Task<T> DeleteByIdAsync(string correlationId, K id)
         {
             var filter = Builders<T>.Filter.Eq(x => x.Id, id);
@@ -290,6 +324,88 @@ namespace PipServices.Oss.MongoDb
 
             _logger.Trace(correlationId, $"Deleted {result.DeletedCount} from {_collection}");
         }
+
+        #region Overridable Compose Methods
+
+        protected virtual FilterDefinition<T> ComposeFilter(FilterParams filterParams)
+        {
+            filterParams = filterParams ?? new FilterParams();
+
+            var builder = Builders<T>.Filter;
+            var filter = builder.Empty;
+
+            foreach (var filterKey in filterParams.Keys)
+            {
+                if (filterKey.Equals("ids"))
+                {
+                    filter &= builder.In(s => s.Id, ToKArray(filterParams.GetAsNullableString("ids")));
+                    continue;
+                }
+
+                filter &= builder.Eq(filterKey, filterParams[filterKey]);
+            }
+
+            return filter;
+        }
+
+        protected virtual UpdateDefinition<T> ComposeUpdate(AnyValueMap updateMap)
+        {
+            updateMap = updateMap ?? new AnyValueMap();
+
+            var builder = Builders<T>.Update;
+            var updateDefinitions = new List<UpdateDefinition<T>>();
+
+            foreach (var key in updateMap.Keys)
+            {
+                updateDefinitions.Add(builder.Set(key, updateMap[key]));
+            }
+
+            return builder.Combine(updateDefinitions);
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
+        {
+            projection = projection ?? new ProjectionParams();
+
+            if (projection.Count == 0 || projection.Contains(IdentifiableFieldName))
+            {
+                return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field)));
+            }
+
+            return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude(InternalIdFieldName);
+        }
+
+        private object UpdateIdField(ExpandoObject expandoObject)
+        {
+            var map = expandoObject as IDictionary<string, object>;
+            if (map != null && map.ContainsKey(InternalIdFieldName))
+            {
+                var idValue = map[InternalIdFieldName];
+
+                map[IdentifiableFieldName] = idValue;
+
+                map.Remove(InternalIdFieldName);
+            }
+
+            return expandoObject;
+        }
+
+        private static K[] ToKArray(string value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            var items = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) as K[];
+            return (items != null && items.Length > 0) ? items : null;
+        }
+
+        #endregion
 
     }
 }

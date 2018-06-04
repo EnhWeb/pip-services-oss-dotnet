@@ -8,8 +8,8 @@ namespace PipServices.Oss.MongoDb
 {
     public sealed class IdentifiableMongoDbPersistenceTest : IDisposable
     {
-        private static IdentifiableMongoDbPersistence<Dummy, string> Db { get; } 
-            = new IdentifiableMongoDbPersistence<Dummy, string>("dummies");
+        private static MongoDbDummyPersistence Db { get; }
+            = new MongoDbDummyPersistence();
         private static PersistenceFixture Fixture { get; set; }
 
         public IdentifiableMongoDbPersistenceTest()
@@ -62,6 +62,12 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
+        public void It_Should_Get_By_Id_And_Projection_From_Array()
+        {
+            Fixture?.TestGetByIdAndProjectionFromArray().Wait();
+        }
+
+        [Fact]
         public void It_Should_Get_By_Id_And_Wrong_Projection()
         {
             Fixture?.TestGetByIdAndWrongProjection().Wait();
@@ -71,6 +77,12 @@ namespace PipServices.Oss.MongoDb
         public void It_Should_Get_By_Id_And_Null_Projection()
         {
             Fixture?.TestGetByIdAndNullProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_By_Id_And_Id_Projection()
+        {
+            Fixture?.TestGetByIdAndIdProjection().Wait();
         }
 
         [Fact]
@@ -95,6 +107,36 @@ namespace PipServices.Oss.MongoDb
         public void It_Should_Not_Get_Page_By_Wrong_Projection()
         {
             Fixture?.TestGetPageByWrongProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Modify_Object_With_Existing_Properties_By_Selected_Fields()
+        {
+            Fixture?.TestModifyExistingPropertiesBySelectedFields().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Modify_Object_With_Null_Properties_By_Selected_Fields()
+        {
+            Fixture?.TestModifyExistingPropertiesBySelectedFields().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Modify_Nested_Collection_By_Selected_Fields()
+        {
+            Fixture?.TestModifyNestedCollectionBySelectedFields().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Search_Within_Nested_Collection_Filter()
+        {
+            Fixture?.TestSearchWithinNestedCollectionByFilter().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Page_By_Ids_Filter()
+        {
+            Fixture?.TestGetPageByIdsFilter().Wait();
         }
 
         public void Dispose()

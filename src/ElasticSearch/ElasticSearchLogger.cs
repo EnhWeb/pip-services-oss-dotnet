@@ -15,6 +15,7 @@ namespace PipServices.Oss.ElasticSearch
 {
     public class ElasticSearchLogger : CachedLogger, IReferenceable, IOpenable
     {
+        private ConsoleLogger _errorConsoleLogger = new ConsoleLogger { Level = LogLevel.Trace };
         private FixedRateTimer _timer;
         private HttpConnectionResolver _connectionResolver = new HttpConnectionResolver();
         private ElasticLowLevelClient _client;
@@ -29,6 +30,7 @@ namespace PipServices.Oss.ElasticSearch
         {
             base.Configure(config);
             _connectionResolver.Configure(config);
+            _errorConsoleLogger.Configure(config);
 
             _indexName = config.GetAsStringWithDefault("index", _indexName);
             _dailyIndex = config.GetAsBooleanWithDefault("daily", _dailyIndex);
@@ -38,6 +40,7 @@ namespace PipServices.Oss.ElasticSearch
         {
             base.SetReferences(references);
             _connectionResolver.SetReferences(references);
+            _errorConsoleLogger.SetReferences(references);
         }
 
         public bool IsOpened()
@@ -52,19 +55,27 @@ namespace PipServices.Oss.ElasticSearch
             var connection = await _connectionResolver.ResolveAsync(correlationId);
             var uri = new Uri(connection.Uri);
 
-            // Create client
-            var settings = new ConnectionConfiguration(uri)
-                .RequestTimeout(TimeSpan.FromMinutes(2))
-                .ThrowExceptions(true);
-            _client = new ElasticLowLevelClient(settings);
-
-            // Create index if it doesn't exist
-            await CreateIndex(correlationId, true);
-
-            if (_timer == null)
+            try
             {
-                _timer = new FixedRateTimer(OnTimer, _interval, _interval);
-                _timer.Start();
+                // Create client
+                var settings = new ConnectionConfiguration(uri)
+                    .RequestTimeout(TimeSpan.FromMinutes(2))
+                    .ThrowExceptions(true);
+                _client = new ElasticLowLevelClient(settings);
+
+                // Create index if it doesn't exist
+                await CreateIndex(correlationId, true);
+
+                if (_timer == null)
+                {
+                    _timer = new FixedRateTimer(OnTimer, _interval, _interval);
+                    _timer.Start();
+                }
+            }
+            catch
+            {
+                // Do nothing if elastic search client was not initialized
+                _errorConsoleLogger.Error(correlationId, $"Failed to initialize Elastic Search Logger with uri='{uri}'");
             }
         }
 
@@ -144,6 +155,9 @@ namespace PipServices.Oss.ElasticSearch
 
         public async Task CloseAsync(string correlationId)
         {
+            // Log all remaining messages before closing
+            Dump();
+
             if (_timer != null)
             {
                 _timer.Stop();
@@ -165,7 +179,9 @@ namespace PipServices.Oss.ElasticSearch
             if (messages == null || messages.Count == 0) return;
 
             if (_client == null)
+            {
                 throw new InvalidStateException("elasticsearch_logger", "NOT_OPENED", "ElasticSearchLogger is not opened");
+            }
 
             lock (_lock)
             {
@@ -178,9 +194,19 @@ namespace PipServices.Oss.ElasticSearch
                     bulk.Add(JsonConverter.ToJson(message));
                 }
 
-                var response = _client.Bulk<StringResponse>(PostData.MultiJson(bulk));
-                if (!response.Success)
-                    throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
+                try
+                {
+                    var response = _client.Bulk<StringResponse>(PostData.MultiJson(bulk));
+                    if (!response.Success)
+                    {
+                        throw new InvocationException("elasticsearch_logger", "REQUEST_FAILED", response.Body);
+                    }
+                }
+                catch
+                {
+                    // Do nothing if elastic search client was not enable to process bulk of messages
+                    _errorConsoleLogger.Error(null, "Failed to bulk messages with Elastic Search Logger.");
+                }
             }
         }
     }

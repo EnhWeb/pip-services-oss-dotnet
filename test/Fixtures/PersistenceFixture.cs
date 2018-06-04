@@ -10,6 +10,7 @@ using PipServices.Commons.Data;
 using PipServices.Oss.MongoDb;
 
 using MongoDB.Driver;
+using PipServices.Commons.Convert;
 
 namespace PipServices.Oss.Fixtures
 {
@@ -24,7 +25,33 @@ namespace PipServices.Oss.Fixtures
             {
                 Description = "Inner Dummy Description"
             },
-            DummyType = DummyType.NotDummy
+            DummyType = DummyType.NotDummy,
+            InnerDummies = new List<InnerDummy>()
+            {
+                new InnerDummy
+                {
+                    Id = "1",
+                    Name = "InnerDummy #1"
+                },
+                new InnerDummy
+                {
+                    Id = "2",
+                    Name = "InnerDummy #2"
+                },
+                new InnerDummy
+                {
+                    Id = "3",
+                    Name = "InnerDummy #3",
+                    InnerInnerDummies = new List<InnerDummy>()
+                    {
+                        new InnerDummy()
+                        {
+                            Id = "100",
+                            Name = "InnerInner Dummy#1"
+                        }
+                    }
+                }
+            }
         };
 
         private readonly Dummy _dummy2 = new Dummy
@@ -35,9 +62,9 @@ namespace PipServices.Oss.Fixtures
             DummyType = DummyType.Dummy
         };
 
-        private readonly IdentifiableMongoDbPersistence<Dummy, string> _persistence;
+        private readonly IDummyPersistence _persistence;
 
-        public PersistenceFixture(IdentifiableMongoDbPersistence<Dummy, string> persistence)
+        public PersistenceFixture(IDummyPersistence persistence)
         {
             Assert.NotNull(persistence);
 
@@ -162,7 +189,7 @@ namespace PipServices.Oss.Fixtures
         {
             // arrange
             var dummy = await _persistence.CreateAsync(null, _dummy1);
-            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key");
+            var projection = ProjectionParams.FromValues("inner_dummy.description", "content", "key");
 
             // act
             dynamic result = await _persistence.GetOneByIdAsync(null, "wrong_id", projection);
@@ -175,18 +202,34 @@ namespace PipServices.Oss.Fixtures
         {
             // arrange
             var dummy = await _persistence.CreateAsync(null, _dummy1);
-            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key", "CreateTimeUtc", "DummyType");
+            var projection = ProjectionParams.FromValues("inner_dummy.description", "content", "key", "create_time_utc", "dummy_type");
 
             // act
             dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Key, result.Key);
-            Assert.Equal(dummy.Content, result.Content);
-            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
-            Assert.Equal(dummy.CreateTimeUtc.ToString(), result.CreateTimeUtc.ToString());
-            Assert.Equal(dummy.DummyType.ToString(), result.DummyType.ToString());
+            Assert.Equal(dummy.Key, result.key);
+            Assert.Equal(dummy.Content, result.content);
+            Assert.Equal(dummy.InnerDummy.Description, result.inner_dummy.description);
+            Assert.Equal(dummy.CreateTimeUtc.ToString(), result.create_time_utc.ToString());
+            Assert.Equal(dummy.DummyType.ToString(), result.dummy_type.ToString());
+        }
+
+        public async Task TestGetByIdAndProjectionFromArray()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromValues("key", "inner_dummies(name, description)");
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Key, result.key);
+            Assert.Equal(dummy.InnerDummies[0].Name, result.inner_dummies[0].name);
+            Assert.Equal(dummy.InnerDummies[1].Description, result.inner_dummies[1].description);
         }
 
         public async Task TestGetByIdAndWrongProjection()
@@ -212,9 +255,35 @@ namespace PipServices.Oss.Fixtures
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Key, result.Key);
-            Assert.Equal(dummy.Content, result.Content);
-            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
+
+            if (result is Dummy)
+            {
+                Assert.Equal(dummy.Id, (result as Dummy).Id);
+                Assert.Equal(dummy.Key, (result as Dummy).Key);
+                Assert.Equal(dummy.Content, (result as Dummy).Content);
+                Assert.Equal(dummy.InnerDummy.Description, (result as Dummy).InnerDummy.Description);
+            }
+            else
+            {
+                Assert.Equal(dummy.Id, result.id);
+                Assert.Equal(dummy.Key, result.key);
+                Assert.Equal(dummy.Content, result.content);
+                Assert.Equal(dummy.InnerDummy.Description, result.inner_dummy.description);
+            }
+        }
+
+        public async Task TestGetByIdAndIdProjection()
+        {
+            // arrange
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+            var projection = ProjectionParams.FromValues("id");
+
+            // act
+            dynamic result = await _persistence.GetOneByIdAsync(null, dummy.Id, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.id);
         }
 
         public async Task TestGetPageByFilter()
@@ -243,7 +312,7 @@ namespace PipServices.Oss.Fixtures
             var builder = Builders<Dummy>.Filter;
             var filter = builder.Empty;
 
-            var projection = ProjectionParams.FromValues("InnerDummy.Description", "Content", "Key", "CreateTimeUtc");
+            var projection = ProjectionParams.FromValues("inner_dummy.description", "content", "key", "create_time_utc");
 
             // act
             dynamic result = await _persistence.GetPageByFilterAndProjectionAsync(null, filter, null, null, projection);
@@ -251,12 +320,12 @@ namespace PipServices.Oss.Fixtures
             // assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Data.Count);
-            Assert.Equal(dummy1.Key, result.Data[0].Key);
-            Assert.Equal(dummy1.Content, result.Data[0].Content);
-            Assert.Equal(dummy1.InnerDummy.Description, result.Data[0].InnerDummy.Description);
-            Assert.Equal(dummy1.CreateTimeUtc.ToString(), result.Data[0].CreateTimeUtc.ToString());
-            Assert.Equal(dummy2.Key, result.Data[1].Key);
-            Assert.Equal(dummy2.Content, result.Data[1].Content);
+            Assert.Equal(dummy1.Key, result.Data[0].key);
+            Assert.Equal(dummy1.Content, result.Data[0].content);
+            Assert.Equal(dummy1.InnerDummy.Description, result.Data[0].inner_dummy.description);
+            Assert.Equal(dummy1.CreateTimeUtc.ToString(), result.Data[0].create_time_utc.ToString());
+            Assert.Equal(dummy2.Key, result.Data[1].key);
+            Assert.Equal(dummy2.Content, result.Data[1].content);
         }
 
         public async Task TestGetPageByNullProjection()
@@ -295,6 +364,114 @@ namespace PipServices.Oss.Fixtures
             Assert.Empty(result.Data);
         }
 
+        public async Task TestModifyExistingPropertiesBySelectedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            var updateMap = new AnyValueMap()
+            {
+                { "Content", "Modified Content" },
+                { "InnerDummy.Description", "Modified InnerDummy Description" }
+            };
+
+            // act
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, ComposeUpdate(updateMap));
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal("Modified Content", result.Content);
+            Assert.Equal("Modified InnerDummy Description", result.InnerDummy.Description);
+        }
+
+        public async Task TestModifyNullPropertiesBySelectedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy2);
+
+            var updateMap = new AnyValueMap()
+            {
+                { "Content", "Modified Content" },
+                { "InnerDummy", new InnerDummy() { Description = "Modified InnerDummy Description" } }
+            };
+
+            // act
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, ComposeUpdate(updateMap));
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Null(dummy.InnerDummy);
+            Assert.Equal("Modified Content", result.Content);
+            Assert.Equal("Modified InnerDummy Description", result.InnerDummy.Description);
+        }
+
+        public async Task TestModifyNestedCollectionBySelectedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+
+            var updateTuples = new Tuple<string, string, string, string>[]
+            {
+                Tuple.Create("InnerDummies.Id", "1", "InnerDummies.$.Name", "Modified Name"),
+                Tuple.Create("InnerDummies.2.InnerInnerDummies.Id", "100", "InnerDummies.2.InnerInnerDummies.$.Name", "Modified Inner Inner Name"),
+            };
+
+            // act 1
+            var result = await _persistence.ModifyAsync(null, ComposeUpdateFilter(dummy.Id, updateTuples[0]), ComposeUpdate(updateTuples[0]));
+
+            // assert 1
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal("Modified Name", result.InnerDummies[0].Name);
+
+            // act 2
+            result = await _persistence.ModifyAsync(null, ComposeUpdateFilter(dummy.Id, updateTuples[1]), ComposeUpdate(updateTuples[1]));
+
+            // assert 2
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal("Modified Inner Inner Name", result.InnerDummies[2].InnerInnerDummies[0].Name);
+        }
+
+        public async Task TestSearchWithinNestedCollectionByFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var filterParams = ExtractFilterParams("InnerDummies.Name:InnerDummy #2");
+
+            // act
+            var result = await _persistence.GetPageByFilterAsync(null, ComposeFilter(filterParams));
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+        }
+
+        public async Task TestGetPageByIdsFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var filter = FilterParams.FromTuples(
+                "ids", $"1234567890,{dummy1.Id}"
+            );
+
+            // act
+            var result = await _persistence.GetAsync(null, filter, null, null);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+        }
+
         private async Task AssertDelete(Dummy dummy)
         {
             await _persistence.DeleteByIdAsync(null, dummy.Id);
@@ -302,6 +479,77 @@ namespace PipServices.Oss.Fixtures
             // Try to get deleted dummy
             var result = await _persistence.GetOneByIdAsync(null, dummy.Id);
             Assert.Null(result);
+        }
+
+        private UpdateDefinition<Dummy> ComposeUpdate(AnyValueMap updateMap)
+        {
+            updateMap = updateMap ?? new AnyValueMap();
+
+            var builder = Builders<Dummy>.Update;
+            var updateDefinitions = new List<UpdateDefinition<Dummy>>();
+
+            foreach (var key in updateMap.Keys)
+            {
+                updateDefinitions.Add(builder.Set(key, updateMap[key]));
+            }
+
+            return builder.Combine(updateDefinitions);
+        }
+
+        private FilterDefinition<Dummy> ComposeUpdateFilter(string id, Tuple<string, string, string, string> updateTuple)
+        {
+            var builder = Builders<Dummy>.Filter;
+            var filter = Builders<Dummy>.Filter.Eq(x => x.Id, id);
+
+            filter &= builder.Eq(updateTuple.Item1, updateTuple.Item2);
+
+            return filter;
+        }
+
+        private UpdateDefinition<Dummy> ComposeUpdate(Tuple<string, string, string, string> updateTuple)
+        {
+            var builder = Builders<Dummy>.Update;
+            var updateDefinitions = new List<UpdateDefinition<Dummy>>();
+
+            if (updateTuple == null)
+            {
+                builder.Combine(updateDefinitions);
+            }
+
+            updateDefinitions.Add(builder.Set(updateTuple.Item3, updateTuple.Item4));
+
+            return builder.Combine(updateDefinitions);
+        }
+
+        private FilterDefinition<Dummy> ComposeFilter(FilterParams filterParams)
+        {
+            filterParams = filterParams ?? new FilterParams();
+
+            var builder = Builders<Dummy>.Filter;
+            var filter = builder.Empty;
+            foreach (var filterKey in filterParams.Keys)
+            {
+                filter &= builder.Eq(filterKey, filterParams[filterKey]);
+            }
+
+            return filter;
+        }
+
+        private FilterParams ExtractFilterParams(string query)
+        {
+            FilterParams filterParams = new FilterParams();
+
+            foreach (var filterParameter in query.Split(','))
+            {
+                var keyValue = filterParameter.Split(':');
+
+                if (keyValue.Length == 2)
+                {
+                    filterParams[keyValue[0]] = keyValue[1];
+                }
+            }
+
+            return filterParams;
         }
     }
 }
