@@ -12,8 +12,9 @@ namespace PipServices.Oss.ElasticSearch
     public sealed class ElasticSearchLoggerTest: IDisposable
     {
         private readonly bool _enabled;
-        private readonly ElasticSearchLogger _logger;
+        private readonly TestElasticSearchLogger _logger;
         private readonly LoggerFixture _fixture;
+        private readonly ElasticSearchLoggerFixture _esFixture;
 
         public ElasticSearchLoggerTest()
         {
@@ -24,7 +25,7 @@ namespace PipServices.Oss.ElasticSearch
             _enabled = BooleanConverter.ToBoolean(ELASTICSEARCH_ENABLED);
             if (_enabled)
             {
-                _logger = new ElasticSearchLogger();
+                _logger = new TestElasticSearchLogger();
                 _logger.Configure(ConfigParams.FromTuples(
                     "level", "trace",
                     "source", "test",
@@ -35,7 +36,9 @@ namespace PipServices.Oss.ElasticSearch
                 ));
 
                 _fixture = new LoggerFixture(_logger);
+                _esFixture = new ElasticSearchLoggerFixture(_logger);
 
+                _logger.OpenAsync(null).Wait();
                 _logger.OpenAsync(null).Wait();
             }
         }
@@ -43,21 +46,29 @@ namespace PipServices.Oss.ElasticSearch
         public void Dispose()
         {
             if (_logger != null)
+            {
                 _logger.CloseAsync(null).Wait();
+            }
         }
 
         [Fact]
         public void TestSimpleLogging()
         {
             if (_enabled)
+            {
                 _fixture.TestSimpleLogging();
+                _esFixture.TestSimpleLogging();
+            }
         }
 
         [Fact]
         public void TestErrorLogging()
         {
             if (_enabled)
+            {
                 _fixture.TestErrorLogging();
+                _esFixture.TestErrorLogging();
+            }
         }
     }
 }
