@@ -2,9 +2,9 @@
 <package>
   <metadata>
     <id>PipServices.Oss</id>
-    <version>1.1.19</version>
+    <version>1.1.20</version>
     <title>PipServices.Oss</title>
-    <authors>Sergey Seroukhov</authors>
+    <authors>Sergey Seroukhov, Alex Mazur, Andrew Harrington</authors>
     <projectUrl>https://github.com/pip-services/pip-services-oss-dotnet</projectUrl>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <iconUrl>https://raw.githubusercontent.com/pip-services/pip-services/master/design/Icon.png</iconUrl>
@@ -15,7 +15,7 @@
     <tags>pip-services open source</tags>
     <dependencies>
       <group targetFramework=".NETStandard2.0">
-        <dependency id="PipServices.Commons" version="2.3.1" />
+        <dependency id="PipServices.Commons" version="2.3.12" />
         <dependency id="PipServices.Net" version="2.4.1" />
         <dependency id="PipServices.Data" version="2.3.0" />
         <dependency id="MongoDB.Driver" version="2.5.0" />

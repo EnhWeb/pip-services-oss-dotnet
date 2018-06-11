@@ -20,6 +20,5 @@ Quick Links:
 
 The .NET version of Pip.Services is created and maintained by:
 - **Sergey Seroukhov**
-
-Many thanks to contibutors, who put their time and talant into making this project better:
-- **Andrew Harrington**, Kyrio
+- **Alex Mazur**
+- **Andrew Harrington**
