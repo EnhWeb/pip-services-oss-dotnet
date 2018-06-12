@@ -134,6 +134,12 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
+        public void It_Should_Modify_Nested_Collection()
+        {
+            Fixture?.TestModifyNestedCollection().Wait();
+        }
+
+        [Fact]
         public void It_Should_Get_Page_By_Ids_Filter()
         {
             Fixture?.TestGetPageByIdsFilter().Wait();

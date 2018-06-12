@@ -438,6 +438,41 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal("Modified Inner Inner Name", result.InnerDummies[2].InnerInnerDummies[0].Name);
         }
 
+        public async Task TestModifyNestedCollection()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            var innerInnerDummies = new List<InnerDummy>()
+            {
+                new InnerDummy()
+                {
+                    Id = "Test Inner Id #1",
+                    Name = "Test Inner Dummy #1"
+                },
+                new InnerDummy()
+                {
+                    Id = "Test Inner Id #2",
+                    Name = "Test Inner Dummy #2"
+                },
+            };
+
+            var updateMap = new AnyValueMap()
+            {
+                { "inner_dummy.inner_inner_dummies", innerInnerDummies }
+            };
+
+            // act - It's important to pass the type of updated object!
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, ComposeUpdate<List<InnerDummy>>(updateMap));
+
+            // assert 1
+            Assert.NotNull(result);
+            Assert.Equal(innerInnerDummies[0].Id, result.InnerDummy.InnerInnerDummies[0].Id);
+            Assert.Equal(innerInnerDummies[0].Name, result.InnerDummy.InnerInnerDummies[0].Name);
+            Assert.Equal(innerInnerDummies[1].Id, result.InnerDummy.InnerInnerDummies[1].Id);
+            Assert.Equal(innerInnerDummies[1].Name, result.InnerDummy.InnerInnerDummies[1].Name);
+        }
+
         public async Task TestSearchWithinNestedCollectionByFilter()
         {
             // arrange 
@@ -483,6 +518,12 @@ namespace PipServices.Oss.Fixtures
 
         private UpdateDefinition<Dummy> ComposeUpdate(AnyValueMap updateMap)
         {
+            return ComposeUpdate<object>(updateMap);
+        }
+
+        private UpdateDefinition<Dummy> ComposeUpdate<T>(AnyValueMap updateMap)
+            where T : class
+        {
             updateMap = updateMap ?? new AnyValueMap();
 
             var builder = Builders<Dummy>.Update;
@@ -490,7 +531,7 @@ namespace PipServices.Oss.Fixtures
 
             foreach (var key in updateMap.Keys)
             {
-                updateDefinitions.Add(builder.Set(key, updateMap[key]));
+                updateDefinitions.Add(builder.Set(key, (T)updateMap[key]));
             }
 
             return builder.Combine(updateDefinitions);
