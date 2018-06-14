@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>PipServices.Oss</id>
-    <version>1.1.20</version>
+    <version>1.1.21</version>
     <title>PipServices.Oss</title>
     <authors>Sergey Seroukhov, Alex Mazur, Andrew Harrington</authors>
     <projectUrl>https://github.com/pip-services/pip-services-oss-dotnet</projectUrl>
@@ -15,9 +15,9 @@
     <tags>pip-services open source</tags>
     <dependencies>
       <group targetFramework=".NETStandard2.0">
-        <dependency id="PipServices.Commons" version="2.3.12" />
-        <dependency id="PipServices.Net" version="2.4.1" />
-        <dependency id="PipServices.Data" version="2.3.0" />
+        <dependency id="PipServices.Commons" version="2.3.15" />
+        <dependency id="PipServices.Net" version="2.4.4" />
+        <dependency id="PipServices.Data" version="2.3.1" />
         <dependency id="MongoDB.Driver" version="2.5.0" />
         <dependency id="Elasticsearch.Net" version="6.0.2" />
       </group>
