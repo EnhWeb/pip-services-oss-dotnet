@@ -17,9 +17,9 @@ namespace PipServices.Oss.MockDb
     public abstract class AbstractMockDbPersistence<T>
         where T : class
     {
-        private const int MaxPageSize = 100;
-        private object _lock = new object();
-        private Dictionary<string, T> _objects = new Dictionary<string, T>();
+        protected const int MaxPageSize = 100;
+        protected object _lock = new object();
+        protected Dictionary<string, T> _objects = new Dictionary<string, T>();
 
         public virtual async Task<T> CreateAsync(string correlationId, T @object)
         {
