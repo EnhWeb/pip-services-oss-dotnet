@@ -18,6 +18,7 @@ namespace PipServices.Oss.Prometheus
         private CompositeLogger _logger = new CompositeLogger();
         private HttpConnectionResolver _connectionResolver = new HttpConnectionResolver();
         private bool _opened;
+        private bool _enabled;
         private string _source;
         private string _instance;
         private HttpClient _client;
@@ -33,6 +34,7 @@ namespace PipServices.Oss.Prometheus
             _connectionResolver.Configure(config);
             _source = config.GetAsStringWithDefault("source", _source);
             _instance = config.GetAsStringWithDefault("instance", _instance);
+            _enabled = config.GetAsBooleanWithDefault("enabled", true);
         }
 
         public virtual void SetReferences(IReferences references)
@@ -89,7 +91,10 @@ namespace PipServices.Oss.Prometheus
 
 		protected override void Save(IEnumerable<Counter> counters)
 		{
-            if (_client == null) return;
+            if (_client == null || !_enabled)
+            {
+                return;
+            }
 
             try
             {
