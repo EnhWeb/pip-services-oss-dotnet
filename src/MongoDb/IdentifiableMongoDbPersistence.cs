@@ -62,7 +62,7 @@ namespace PipServices.Oss.MongoDb
             };
         }
 
-        public async Task<DataPage<object>> GetPageByFilterAndProjectionAsync(string correlationId, FilterDefinition<T> filterDefinition,
+        public virtual async Task<DataPage<object>> GetPageByFilterAndProjectionAsync(string correlationId, FilterDefinition<T> filterDefinition,
             PagingParams paging = null, SortDefinition<T> sortDefinition = null, ProjectionParams projection = null)
         {
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
@@ -160,7 +160,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<object> GetOneByIdAsync(string correlationId, K id, ProjectionParams projection)
+        public virtual async Task<object> GetOneByIdAsync(string correlationId, K id, ProjectionParams projection)
         {
             var builder = Builders<T>.Filter;
             var filter = builder.Eq(x => x.Id, id);
@@ -367,7 +367,7 @@ namespace PipServices.Oss.MongoDb
 
         #region Helper Methods
 
-        private ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
+        protected ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
         {
             projection = projection ?? new ProjectionParams();
 
@@ -379,7 +379,7 @@ namespace PipServices.Oss.MongoDb
             return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude(InternalIdFieldName);
         }
 
-        private object UpdateIdField(ExpandoObject expandoObject)
+        protected object UpdateIdField(ExpandoObject expandoObject)
         {
             var map = expandoObject as IDictionary<string, object>;
             if (map != null && map.ContainsKey(InternalIdFieldName))
@@ -394,7 +394,7 @@ namespace PipServices.Oss.MongoDb
             return expandoObject;
         }
 
-        private static K[] ToKArray(string value)
+        protected static K[] ToKArray(string value)
         {
             if (value == null)
             {

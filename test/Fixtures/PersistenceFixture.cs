@@ -265,7 +265,7 @@ namespace PipServices.Oss.Fixtures
             }
             else
             {
-                Assert.Equal(dummy.Id, result.id);
+                Assert.Equal(dummy.Id, result._id);
                 Assert.Equal(dummy.Key, result.key);
                 Assert.Equal(dummy.Content, result.content);
                 Assert.Equal(dummy.InnerDummy.Description, result.inner_dummy.description);
@@ -283,7 +283,7 @@ namespace PipServices.Oss.Fixtures
 
             // assert
             Assert.NotNull(result);
-            Assert.Equal(dummy.Id, result.id);
+            Assert.Equal(dummy.Id, result._id);
         }
 
         public async Task TestGetPageByFilter()
