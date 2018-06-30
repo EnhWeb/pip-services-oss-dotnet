@@ -51,5 +51,11 @@ namespace PipServices.Oss.MockDb
         {
             Fixture?.TestGetByIdAndNullProjection().Wait();
         }
+
+        [Fact]
+        public void It_Should_Get_By_Id_And_Id_Projection()
+        {
+            Fixture?.TestGetByIdAndIdProjection().Wait();
+        }
     }
 }

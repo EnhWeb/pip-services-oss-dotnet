@@ -96,5 +96,13 @@ namespace PipServices.Oss.MongoDb
 
             return BsonSerializer.Deserialize<object>(result);
         }
+
+        protected override ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
+        {
+            projection = projection ?? new ProjectionParams();
+
+            return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude(InternalIdFieldName);
+        }
+
     }
 }

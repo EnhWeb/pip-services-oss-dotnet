@@ -22,8 +22,8 @@ namespace PipServices.Oss.MongoDb
     {
         protected int _maxPageSize = 100;
 
-        private const string IdentifiableFieldName = "id";
-        private const string InternalIdFieldName = "_id";
+        protected const string IdentifiableFieldName = "id";
+        protected const string InternalIdFieldName = "_id";
 
         public IdentifiableMongoDbPersistence(string collectionName)
             : base(collectionName)
@@ -367,7 +367,7 @@ namespace PipServices.Oss.MongoDb
 
         #region Helper Methods
 
-        protected ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
+        protected virtual ProjectionDefinition<T> CreateProjectionDefinition(ProjectionParams projection, ProjectionDefinitionBuilder<T> projectionBuilder)
         {
             projection = projection ?? new ProjectionParams();
 

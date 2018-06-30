@@ -15,6 +15,8 @@ namespace PipServices.Oss.Fixtures
     }
 
     [DataContract]
+    [BsonNoId]
+    [BsonIgnoreExtraElements]
     public class Dummy : IStringIdentifiable
     {
         [BsonElement("id")]
