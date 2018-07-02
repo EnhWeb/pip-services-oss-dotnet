@@ -43,6 +43,16 @@ namespace PipServices.Oss.ElasticSearch
             _errorConsoleLogger.SetReferences(references);
         }
 
+        protected override void Write(LogLevel level, string correlationId, Exception error, string message)
+        {
+            if (Level < level)
+            {
+                return;
+            }
+
+            base.Write(level, correlationId, error, message);
+        }
+
         public bool IsOpened()
         {
             return _timer != null;
