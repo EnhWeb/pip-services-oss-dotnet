@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Threading;
+
 using PipServices.Commons.Config;
-using Xunit;
 using PipServices.Oss.Fixtures;
+
+using Xunit;
 
 namespace PipServices.Oss.MongoDb
 {
     public sealed class IdentifiableMongoDbPersistenceTest : IDisposable
     {
-        private static MongoDbDummyPersistenceEx Db { get; } = new MongoDbDummyPersistenceEx();
+        private static MongoDbDummyPersistence Db { get; } = new MongoDbDummyPersistence();
         private static PersistenceFixture Fixture { get; set; }
 
         public IdentifiableMongoDbPersistenceTest()

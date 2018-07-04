@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
@@ -22,7 +20,6 @@ namespace PipServices.Oss.MongoDb
     {
         protected int _maxPageSize = 100;
 
-        protected const string IdentifiableFieldName = "id";
         protected const string InternalIdFieldName = "_id";
 
         public IdentifiableMongoDbPersistence(string collectionName)
@@ -90,19 +87,19 @@ namespace PipServices.Oss.MongoDb
                 Total = count
             };
 
-            foreach (var item in items)
+            using (var cursor = await query.Project(projectionDefinition).Skip((int)skip).Limit((int)take).ToCursorAsync())
             {
-                // Maybe we could do another check if item is empty?
-                if (item.Elements.Count() > 0)
+                while (await cursor.MoveNextAsync())
                 {
-                    // Convert to JSON to fix issue with ISODate
-                    var jsonString = JsonConverter.ToJson(BsonTypeMapper.MapToDotNetValue(item));
-
-                    result.Data.Add(UpdateIdField(JsonConverter.FromJson<ExpandoObject>(jsonString)));
+                    foreach (var doc in cursor.Current)
+                    {
+                        if (doc.ElementCount != 0)
+                        {
+                            result.Data.Add(BsonSerializer.Deserialize<object>(doc));
+                        }
+                    }
                 }
             }
-
-            result.Total = result.Data.Count;
 
             _logger.Trace(correlationId, $"Retrieved {result.Total} from {_collection} with projection fields = '{StringConverter.ToString(projection)}'");
 
@@ -176,7 +173,7 @@ namespace PipServices.Oss.MongoDb
                 return null;
             }
 
-            if (result.Elements.Count() == 0)
+            if (result.ElementCount == 0)
             {
                 _logger.Trace(correlationId, "Retrieved from {0} with id = {1}, but projection is not valid '{2}'", _collectionName, id, StringConverter.ToString(projection));
                 return null;
@@ -184,11 +181,7 @@ namespace PipServices.Oss.MongoDb
 
             _logger.Trace(correlationId, "Retrieved from {0} with id = {1} and projection fields '{2}'", _collectionName, id, StringConverter.ToString(projection));
 
-            // Convert to JSON to fix issue with ISODate
-            var jsonString = JsonConverter.ToJson(BsonTypeMapper.MapToDotNetValue(result));
-
-            // convert result to dynamic object
-            return UpdateIdField(JsonConverter.FromJson<ExpandoObject>(jsonString));
+            return BsonSerializer.Deserialize<object>(result);
         }
 
         public async Task<T> GetOneRandomAsync(string correlationId, FilterDefinition<T> filterDefinition)
@@ -338,7 +331,7 @@ namespace PipServices.Oss.MongoDb
             {
                 if (filterKey.Equals("ids"))
                 {
-                    filter &= builder.In(s => s.Id, ToKArray(filterParams.GetAsNullableString("ids")));
+                    filter &= builder.In(s => s.Id, ToArrayOfType<K>(filterParams.GetAsNullableString("ids")));
                     continue;
                 }
 
@@ -371,37 +364,17 @@ namespace PipServices.Oss.MongoDb
         {
             projection = projection ?? new ProjectionParams();
 
-            if (projection.Count == 0 || projection.Contains(IdentifiableFieldName))
-            {
-                return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field)));
-            }
-
             return projectionBuilder.Combine(projection.Select(field => projectionBuilder.Include(field))).Exclude(InternalIdFieldName);
         }
 
-        protected object UpdateIdField(ExpandoObject expandoObject)
-        {
-            var map = expandoObject as IDictionary<string, object>;
-            if (map != null && map.ContainsKey(InternalIdFieldName))
-            {
-                var idValue = map[InternalIdFieldName];
-
-                map[IdentifiableFieldName] = idValue;
-
-                map.Remove(InternalIdFieldName);
-            }
-
-            return expandoObject;
-        }
-
-        protected static K[] ToKArray(string value)
+        protected static TT[] ToArrayOfType<TT>(string value)
         {
             if (value == null)
             {
                 return null;
             }
 
-            var items = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) as K[];
+            var items = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) as TT[];
             return (items != null && items.Length > 0) ? items : null;
         }
 
