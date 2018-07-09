@@ -134,6 +134,24 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
+        public void It_Should_Search_Within_Nested_Collection_Filter_By_Null_Projection()
+        {
+            Fixture?.TestSearchWithinNestedCollectionByFilterAndNullProjection().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Search_Within_Deep_Nested_Collection_Filter()
+        {
+            Fixture?.TestSearchWithinDeepNestedCollectionByFilter().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Search_Within_Deep_Nested_Collection_Filter_By_Null_Projection()
+        {
+            Fixture?.TestSearchWithinDeepNestedCollectionByFilterAndNullProjection().Wait();
+        }
+
+        [Fact]
         public void It_Should_Modify_Nested_Collection()
         {
             Fixture?.TestModifyNestedCollection().Wait();

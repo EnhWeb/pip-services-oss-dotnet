@@ -39,7 +39,7 @@ namespace PipServices.Oss.MongoDb
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
             var renderedFilter = filterDefinition.Render(documentSerializer, BsonSerializer.SerializerRegistry);
 
-            var query = _collection.Find(filterDefinition);
+            var query = _collection.Find(renderedFilter);
             if (sortDefinition != null)
                 query = query.Sort(sortDefinition);
 
@@ -65,7 +65,7 @@ namespace PipServices.Oss.MongoDb
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
             var renderedFilter = filterDefinition.Render(documentSerializer, BsonSerializer.SerializerRegistry);
 
-            var query = _collection.Find(filterDefinition);
+            var query = _collection.Find(renderedFilter);
             if (sortDefinition != null)
             {
                 query = query.Sort(sortDefinition);
@@ -112,7 +112,7 @@ namespace PipServices.Oss.MongoDb
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
             var renderedFilter = filterDefinition.Render(documentSerializer, BsonSerializer.SerializerRegistry);
 
-            var query = _collection.Find(filterDefinition);
+            var query = _collection.Find(renderedFilter);
             if (sortDefinition != null)
                 query = query.Sort(sortDefinition);
 
@@ -131,7 +131,7 @@ namespace PipServices.Oss.MongoDb
             var filterDefinition = builder.In(x => x.Id, ids);
             var renderedFilter = filterDefinition.Render(documentSerializer, BsonSerializer.SerializerRegistry);
 
-            var query = _collection.Find(filterDefinition);
+            var query = _collection.Find(renderedFilter);
             var items = await query.ToListAsync();
 
             _logger.Trace(correlationId, $"Retrieved {items.Count} from {_collection}");
@@ -189,7 +189,7 @@ namespace PipServices.Oss.MongoDb
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
             var renderedFilter = filterDefinition.Render(documentSerializer, BsonSerializer.SerializerRegistry);
 
-            var count = (int)_collection.Count(filterDefinition);
+            var count = (int)_collection.Count(renderedFilter);
 
             if (count <= 0)
             {

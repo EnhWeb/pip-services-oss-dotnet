@@ -62,6 +62,44 @@ namespace PipServices.Oss.Fixtures
             DummyType = DummyType.Dummy
         };
 
+        private readonly Dummy _dummy3 = new Dummy
+        {
+            Key = "Key 3",
+            Content = "Content 3",
+            CreateTimeUtc = DateTime.UtcNow,
+            InnerDummy = new InnerDummy()
+            {
+                Description = "Inner Dummy #3 Description"
+            },
+            DummyType = DummyType.Dummy,
+            InnerDummies = new List<InnerDummy>()
+            {
+                new InnerDummy
+                {
+                    Id = "3",
+                    Name = "InnerDummy #3",
+                    InnerInnerDummies = new List<InnerDummy>()
+                    {
+                        new InnerDummy()
+                        {
+                            Id = "100",
+                            Name = "InnerInner Dummy# 3.1"
+                        },
+                        new InnerDummy
+                        {
+                            Id = "200",
+                            Name = "InnerInner Dummy #3.2"
+                        },
+                        new InnerDummy
+                        {
+                            Id = "300",
+                            Name = "InnerInner Dummy #3.3"
+                        }
+                    }
+                }
+            }
+        };
+
         private readonly IDummyPersistence _persistence;
 
         public PersistenceFixture(IDummyPersistence persistence)
@@ -479,7 +517,7 @@ namespace PipServices.Oss.Fixtures
             var dummy1 = await _persistence.CreateAsync(null, _dummy1);
             var dummy2 = await _persistence.CreateAsync(null, _dummy2);
 
-            var filterParams = ExtractFilterParams("InnerDummies.Name:InnerDummy #2");
+            var filterParams = ExtractFilterParams("inner_dummies.name:InnerDummy #2");
 
             // act
             var result = await _persistence.GetPageByFilterAsync(null, ComposeFilter(filterParams));
@@ -487,6 +525,60 @@ namespace PipServices.Oss.Fixtures
             // assert
             Assert.NotNull(result);
             Assert.Single(result.Data);
+            Assert.Equal(dummy1.Id, result.Data[0].Id);
+        }
+
+        public async Task TestSearchWithinNestedCollectionByFilterAndNullProjection()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+
+            var filterParams = ExtractFilterParams("inner_dummies.name:InnerDummy #2");
+
+            // act
+            dynamic result = await _persistence.GetPageByFilterAndProjectionAsync(null, ComposeFilter(filterParams), null, null, null);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+            Assert.Equal(dummy1.Id, result.Data[0].id);
+        }
+
+        public async Task TestSearchWithinDeepNestedCollectionByFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            var filterParams = ExtractFilterParams("inner_dummies.inner_inner_dummies.name:InnerInner Dummy#1");
+
+            // act
+            var result = await _persistence.GetPageByFilterAsync(null, ComposeFilter(filterParams));
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+            Assert.Equal(dummy1.Id, result.Data[0].Id);
+        }
+
+        public async Task TestSearchWithinDeepNestedCollectionByFilterAndNullProjection()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            var filterParams = ExtractFilterParams("inner_dummies.inner_inner_dummies.name:InnerInner Dummy #3.3");
+
+            // act
+            dynamic result = await _persistence.GetPageByFilterAndProjectionAsync(null, ComposeFilter(filterParams), null, null, null);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Single(result.Data);
+            Assert.Equal(dummy3.Id, result.Data[0].id);
         }
 
         public async Task TestGetPageByIdsFilter()
