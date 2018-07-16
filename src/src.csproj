@@ -23,11 +23,15 @@
     <PackageReference Include="PipServices.Data" Version="2.3.1" />
     <PackageReference Include="PipServices.Commons" Version="2.3.15" />
     <PackageReference Include="PipServices.Net" Version="2.4.4" />
+    <PackageReference Include="ServiceStack.Redis.Core" Version="5.1.0" />
+    <PackageReference Include="VIEApps.Enyim.Caching" Version="1.5.3.1806" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Build\" />
     <Folder Include="ElasticSearch\" />
     <Folder Include="Prometheus\" />
+    <Folder Include="Redis\" />
+    <Folder Include="Memcached\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Commands\Command.cs" />
