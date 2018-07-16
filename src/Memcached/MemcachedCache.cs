@@ -88,14 +88,14 @@ namespace PipServices.Oss.Memcached
                 throw new InvalidStateException(correlationId, "NOT_OPENED", "Connection is not opened");
         }
 
-        public async Task<object> RetrieveAsync(string correlationId, string key)
+        public async Task<T> RetrieveAsync<T>(string correlationId, string key)
         {
             CheckOpened(correlationId);
 
-            return await _client.GetAsync<object>(key);
+            return await _client.GetAsync<T>(key);
         }
 
-        public async Task<object> StoreAsync(string correlationId, string key, object value, long timeout)
+        public async Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
         {
             CheckOpened(correlationId);
 

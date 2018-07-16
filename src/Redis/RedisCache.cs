@@ -95,17 +95,17 @@ namespace PipServices.Oss.Redis
                 throw new InvalidStateException(correlationId, "NOT_OPENED", "Connection is not opened");
         }
 
-        public async Task<object> RetrieveAsync(string correlationId, string key)
+        public async Task<T> RetrieveAsync<T>(string correlationId, string key)
         {
             CheckOpened(correlationId);
 
             var json = _client.GetValue(key);
-            var value = JsonConverter.FromJson(json);
+            var value = JsonConverter.FromJson<T>(json);
 
             return await Task.FromResult(value);
         }
 
-        public async Task<object> StoreAsync(string correlationId, string key, object value, long timeout)
+        public async Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
         {
             CheckOpened(correlationId);
 

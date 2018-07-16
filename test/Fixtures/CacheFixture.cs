@@ -27,8 +27,8 @@ namespace PipServices.Oss.Fixtures
         {
             Task.Delay(500).Wait();
 
-            var val1 = _cache.RetrieveAsync(null, Key1).Result;
-            var val2 = _cache.RetrieveAsync(null, Key2).Result;
+            var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
+            var val2 = _cache.RetrieveAsync<string>(null, Key2).Result;
 
             Assert.NotNull(val1);
             Assert.Equal(Value1, val1);
@@ -41,8 +41,8 @@ namespace PipServices.Oss.Fixtures
         {
             Task.Delay(1000).Wait();
 
-            var val1 = _cache.RetrieveAsync(null, Key1).Result;
-            var val2 = _cache.RetrieveAsync(null, Key2).Result;
+            var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
+            var val2 = _cache.RetrieveAsync<string>(null, Key2).Result;
 
             //Assert.Null(val1);
             //Assert.Null(val2);
@@ -57,7 +57,7 @@ namespace PipServices.Oss.Fixtures
         public void TestStoreValueIsStored()
         {
             var value = _cache.StoreAsync(null, Key3, Value3, 1000).Result;
-            var val3 = _cache.RetrieveAsync(null, Key3).Result;
+            var val3 = _cache.RetrieveAsync<string>(null, Key3).Result;
 
             Assert.NotNull(val3);
             Assert.Equal(Value3, val3);
@@ -67,20 +67,20 @@ namespace PipServices.Oss.Fixtures
         {
             _cache.RemoveAsync(null, Key1).Wait();
 
-            var val1 = _cache.RetrieveAsync(null, Key1).Result;
+            var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
             Assert.Null(val1);
         }
 
         public void TestConfigureNewValueStaysFor1500msButFailsFor2500ms()
         {
             var value = _cache.StoreAsync(null, Key3, Value3, 2000).Result;
-            var val3 = _cache.RetrieveAsync(null, Key3).Result;
+            var val3 = _cache.RetrieveAsync<string>(null, Key3).Result;
             Assert.NotNull(val3);
             Assert.Equal(Value3, val3);
 
             Task.Delay(2500).Wait();
 
-            val3 = _cache.RetrieveAsync(null, Key3).Result;
+            val3 = _cache.RetrieveAsync<string>(null, Key3).Result;
             Assert.Null(val3);
         }
 
