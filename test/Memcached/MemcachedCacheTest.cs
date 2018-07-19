@@ -24,10 +24,6 @@ namespace PipServices.Oss.Memcached
             {
                 _cache = new MemcachedCache();
                 _cache.Configure(ConfigParams.FromTuples(
-                    "level", "trace",
-                    "source", "test",
-                    "index", "log",
-                    "daily", true,
                     "connection.host", MEMCACHED_SERVICE_HOST,
                     "connection.port", MEMCACHED_SERVICE_PORT
                 ));

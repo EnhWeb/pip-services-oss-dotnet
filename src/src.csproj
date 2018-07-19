@@ -18,13 +18,13 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.6.1" />
-    <PackageReference Include="Elasticsearch.Net" Version="6.1.0" />
     <PackageReference Include="PipServices.Data" Version="2.3.2" />
     <PackageReference Include="PipServices.Commons" Version="2.4.0" />
     <PackageReference Include="PipServices.Net" Version="2.4.4" />
-    <PackageReference Include="ServiceStack.Redis.Core" Version="5.1.0" />
     <PackageReference Include="VIEApps.Enyim.Caching" Version="1.5.3.1806" />
+    <PackageReference Include="MongoDB.Driver" Version="2.7.0" />
+    <PackageReference Include="Elasticsearch.Net" Version="6.2.0" />
+    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Build\" />

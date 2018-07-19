@@ -24,10 +24,6 @@ namespace PipServices.Oss.Redis
             {
                 _cache = new RedisCache();
                 _cache.Configure(ConfigParams.FromTuples(
-                    "level", "trace",
-                    "source", "test",
-                    "index", "log",
-                    "daily", true,
                     "connection.host", REDIS_SERVICE_HOST,
                     "connection.port", REDIS_SERVICE_PORT
                 ));
@@ -58,11 +54,11 @@ namespace PipServices.Oss.Redis
             _fixture.TestRetrieveBothValueIn1000msFails();
         }
 
-        [Fact]
-        public void Store_ReturnsSameValue()
-        {
-            _fixture.TestStoreReturnsSameValue();
-        }
+        //[Fact]
+        //public void Store_ReturnsSameValue()
+        //{
+        //    _fixture.TestStoreReturnsSameValue();
+        //}
 
         [Fact]
         public void Store_ValueIsStored()

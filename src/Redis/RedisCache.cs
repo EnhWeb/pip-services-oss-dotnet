@@ -9,8 +9,8 @@ using PipServices.Commons.Connect;
 using PipServices.Commons.Errors;
 using PipServices.Commons.Convert;
 
-using ServiceStack.Redis;
 using System.Threading.Tasks;
+using StackExchange.Redis;
 
 namespace PipServices.Oss.Redis
 {
@@ -22,7 +22,8 @@ namespace PipServices.Oss.Redis
         private int _connectTimeout = 30000;
         private int _retryTimeout = 3000;
         private int _retries = 3;
-        private IRedisClient _client = null;
+        private ConnectionMultiplexer _client = null;
+        private IDatabase _database = null;
 
         public RedisCache()
         {
@@ -55,38 +56,42 @@ namespace PipServices.Oss.Redis
             if (connection == null)
                 throw new ConfigException(correlationId, "NO_CONNECTION", "Connection is not configured");
 
+            ConfigurationOptions options;
             var uri = connection.Uri;
             if (!string.IsNullOrEmpty(uri))
             {
-                _client = new RedisClient(new Uri(uri));
+                options = ConfigurationOptions.Parse(uri);
             }
             else
             {                
                 var host = connection.Host ?? "localhost";
                 var port = connection.Port != 0 ? connection.Port : 6379;
-                _client = new RedisClient(host, port);
+                options = new ConfigurationOptions();
+                options.EndPoints.Add(host, port);
             }
 
             var credential = await _credentialResolver.LookupAsync(correlationId);
             if (credential != null && !string.IsNullOrEmpty(credential.Password))
             {
-                _client.Password = credential.Password;
+                options.Password = credential.Password;
             }
- 
-            _client.ConnectTimeout = _connectTimeout;
-            _client.RetryTimeout = _retryTimeout;
-            _client.RetryCount = _retries;
+
+            options.ConnectTimeout = _connectTimeout;
+            options.ResponseTimeout = _retryTimeout;
+            options.ConnectRetry = _retries;
+
+            _client = await ConnectionMultiplexer.ConnectAsync(options);
+            _database = _client.GetDatabase();
         }
 
         public async Task CloseAsync(string correlationId)
         {
             if (_client != null)
             {
-                _client.Dispose();
+                await _client.CloseAsync();
                 _client = null;
+                _database = null;
             }
-
-            await Task.Delay(0);
         }
 
         private void CheckOpened(string correlationId)
@@ -99,10 +104,10 @@ namespace PipServices.Oss.Redis
         {
             CheckOpened(correlationId);
 
-            var json = _client.GetValue(key);
+            var json = await _database.StringGetAsync(key);
             var value = JsonConverter.FromJson<T>(json);
 
-            return await Task.FromResult(value);
+            return value;
         }
 
         public async Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
@@ -110,18 +115,16 @@ namespace PipServices.Oss.Redis
             CheckOpened(correlationId);
 
             var json = JsonConverter.ToJson(value);
-            _client.SetValue(key, json, TimeSpan.FromMilliseconds(timeout));
+            await _database.StringSetAsync(key, json, TimeSpan.FromMilliseconds(timeout));
 
-            return await Task.FromResult(value);
+            return value;
         }
 
         public async Task RemoveAsync(string correlationId, string key)
         {
             CheckOpened(correlationId);
 
-            _client.Remove(key);
-
-            await Task.Delay(0);
+            await _database.KeyDeleteAsync(key);
         }
     }
 }
