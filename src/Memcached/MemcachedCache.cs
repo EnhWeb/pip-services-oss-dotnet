@@ -99,9 +99,9 @@ namespace PipServices.Oss.Memcached
         {
             CheckOpened(correlationId);
 
-            await _client.StoreAsync(Enyim.Caching.Memcached.StoreMode.Set, key, value, TimeSpan.FromMilliseconds(timeout));
+            var result = await _client.StoreAsync(Enyim.Caching.Memcached.StoreMode.Set, key, value, TimeSpan.FromMilliseconds(timeout));
 
-            return value;
+            return result ? value : default(T);
         }
 
         public async Task RemoveAsync(string correlationId, string key)

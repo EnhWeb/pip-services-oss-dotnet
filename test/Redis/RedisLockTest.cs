@@ -7,6 +7,7 @@ using Xunit;
 
 namespace PipServices.Oss.Redis
 {
+    [Collection("Sequential")]
     public class RedisLockTest : IDisposable
     {
         private readonly bool _enabled;

@@ -115,9 +115,9 @@ namespace PipServices.Oss.Redis
             CheckOpened(correlationId);
 
             var json = JsonConverter.ToJson(value);
-            await _database.StringSetAsync(key, json, TimeSpan.FromMilliseconds(timeout));
+            var result = await _database.StringSetAsync(key, json, TimeSpan.FromMilliseconds(timeout));
 
-            return value;
+            return result ? value : default(T);
         }
 
         public async Task RemoveAsync(string correlationId, string key)

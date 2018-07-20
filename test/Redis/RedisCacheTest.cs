@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Threading.Tasks;
+
 using PipServices.Commons.Config;
 using PipServices.Commons.Convert;
 using PipServices.Oss.Fixtures;
+
 using Xunit;
 
 namespace PipServices.Oss.Redis
 {
+    [Collection("Sequential")]
     public class RedisCacheTest: IDisposable
     {
         private readonly bool _enabled;
@@ -42,40 +44,28 @@ namespace PipServices.Oss.Redis
             }
         }
 
-        //[Fact]
-        //public void Retrieve_BothValue_In500ms()
-        //{
-        //    _fixture.TestRetrieveBothValueIn500ms();
-        //}
-
         [Fact]
-        public void Retrieve_BothValue_In1000ms_Fails()
+        public void It_Should_Store_Cached_Value()
         {
-            _fixture.TestRetrieveBothValueIn1000msFails();
-        }
-
-        //[Fact]
-        //public void Store_ReturnsSameValue()
-        //{
-        //    _fixture.TestStoreReturnsSameValue();
-        //}
-
-        [Fact]
-        public void Store_ValueIsStored()
-        {
-            _fixture.TestStoreValueIsStored();
+            _fixture.TestStoreAsync();
         }
 
         [Fact]
-        public void Remove_ValueIsRemoved()
+        public void It_Should_Store_And_Retrieve_Cached_Value()
         {
-            _fixture.TestRemoveValueIsRemoved();
+            _fixture.TestStoreAndRetrieveAsync();
         }
 
         [Fact]
-        public void Configure_NewValueStaysFor1500ms_ButFailsFor2500ms()
+        public void It_Should_Store_And_Retrieve_Expired_Cached_Value()
         {
-            _fixture.TestConfigureNewValueStaysFor1500msButFailsFor2500ms();
+            _fixture.TestStoreAndRetrieveExpiredAsync();
+        }
+
+        [Fact]
+        public void It_Should_Store_And_Retrieve_Removed_Cached_Value3()
+        {
+            _fixture.TestStoreAndRetrieveRemovedAsync();
         }
     }
 }

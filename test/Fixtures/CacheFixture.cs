@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using PipServices.Commons.Cache;
+
 using Xunit;
 
 namespace PipServices.Oss.Fixtures
@@ -23,66 +23,52 @@ namespace PipServices.Oss.Fixtures
             _cache = cache;
         }
 
-        public void TestRetrieveBothValueIn500ms()
+        public async void TestStoreAsync()
         {
-            Task.Delay(500).Wait();
+            var result = await _cache.StoreAsync(null, Key1, Value1, 5000);
+
+            Assert.NotNull(result);
+        }
+
+        public async void TestStoreAndRetrieveAsync()
+        {
+            await _cache.StoreAsync(null, Key1, Value1, 5000);
+            await _cache.StoreAsync(null, Key2, Value2, 5000);
+
+            await Task.Delay(500);
 
             var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
             var val2 = _cache.RetrieveAsync<string>(null, Key2).Result;
 
             Assert.NotNull(val1);
-            Assert.Equal(Value1, val1);
-
             Assert.NotNull(val2);
+
+            Assert.Equal(Value1, val1);
             Assert.Equal(Value2, val2);
         }
 
-        public void TestRetrieveBothValueIn1000msFails()
+        public async void TestStoreAndRetrieveExpiredAsync()
         {
-            Task.Delay(1000).Wait();
+            await _cache.StoreAsync(null, Key1, Value1, 500);
+
+            await Task.Delay(2000);
 
             var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
-            var val2 = _cache.RetrieveAsync<string>(null, Key2).Result;
 
-            //Assert.Null(val1);
-            //Assert.Null(val2);
-        }
-
-        public void TestStoreReturnsSameValue()
-        {
-            var storedVal = _cache.StoreAsync(null, Key3, Value3, 0).Result;
-            Assert.Equal(Value3, storedVal);
-        }
-
-        public void TestStoreValueIsStored()
-        {
-            var value = _cache.StoreAsync(null, Key3, Value3, 1000).Result;
-            var val3 = _cache.RetrieveAsync<string>(null, Key3).Result;
-
-            Assert.NotNull(val3);
-            Assert.Equal(Value3, val3);
-        }
-
-        public void TestRemoveValueIsRemoved()
-        {
-            _cache.RemoveAsync(null, Key1).Wait();
-
-            var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
             Assert.Null(val1);
         }
 
-        public void TestConfigureNewValueStaysFor1500msButFailsFor2500ms()
+        public async void TestStoreAndRetrieveRemovedAsync()
         {
-            var value = _cache.StoreAsync(null, Key3, Value3, 2000).Result;
-            var val3 = _cache.RetrieveAsync<string>(null, Key3).Result;
-            Assert.NotNull(val3);
-            Assert.Equal(Value3, val3);
+            await _cache.StoreAsync(null, Key1, Value1, 5000);
 
-            Task.Delay(2500).Wait();
+            await Task.Delay(500);
 
-            val3 = _cache.RetrieveAsync<string>(null, Key3).Result;
-            Assert.Null(val3);
+            await _cache.RemoveAsync(null, Key1);
+
+            var val1 = _cache.RetrieveAsync<string>(null, Key1).Result;
+
+            Assert.Null(val1);
         }
-
     }
 }

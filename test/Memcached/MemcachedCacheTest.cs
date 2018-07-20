@@ -7,6 +7,7 @@ using Xunit;
 
 namespace PipServices.Oss.Memcached
 {
+    [Collection("Sequential")]
     public class MemcachedCacheTest : IDisposable
     {
         private readonly bool _enabled;
@@ -42,40 +43,28 @@ namespace PipServices.Oss.Memcached
             }
         }
 
-        //[Fact]
-        //public void Retrieve_BothValue_In500ms()
-        //{
-        //    _fixture.TestRetrieveBothValueIn500ms();
-        //}
-
         [Fact]
-        public void Retrieve_BothValue_In1000ms_Fails()
+        public void It_Should_Store_Cached_Value()
         {
-            _fixture.TestRetrieveBothValueIn1000msFails();
+            _fixture.TestStoreAsync();
         }
 
         [Fact]
-        public void Store_ReturnsSameValue()
+        public void It_Should_Store_And_Retrieve_Cached_Value()
         {
-            _fixture.TestStoreReturnsSameValue();
+            _fixture.TestStoreAndRetrieveAsync();
         }
-
-        //[Fact]
-        //public void Store_ValueIsStored()
-        //{
-        //    _fixture.TestStoreValueIsStored();
-        //}
 
         [Fact]
-        public void Remove_ValueIsRemoved()
+        public void It_Should_Store_And_Retrieve_Expired_Cached_Value()
         {
-            _fixture.TestRemoveValueIsRemoved();
+            _fixture.TestStoreAndRetrieveExpiredAsync();
         }
 
-        //[Fact]
-        //public void Configure_NewValueStaysFor1500ms_ButFailsFor2500ms()
-        //{
-        //    _fixture.TestConfigureNewValueStaysFor1500msButFailsFor2500ms();
-        //}
+        [Fact]
+        public void It_Should_Store_And_Retrieve_Removed_Cached_Value3()
+        {
+            _fixture.TestStoreAndRetrieveRemovedAsync();
+        }
     }
 }

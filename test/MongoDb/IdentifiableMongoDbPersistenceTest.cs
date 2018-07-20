@@ -7,6 +7,7 @@ using Xunit;
 
 namespace PipServices.Oss.MongoDb
 {
+    [Collection("Sequential")]
     public sealed class IdentifiableMongoDbPersistenceTest : IDisposable
     {
         private static MongoDbDummyPersistence Db { get; } = new MongoDbDummyPersistence();

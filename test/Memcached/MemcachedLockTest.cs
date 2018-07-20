@@ -7,6 +7,7 @@ using Xunit;
 
 namespace PipServices.Oss.Memcached
 {
+    [Collection("Sequential")]
     public class MemcachedLockTest : IDisposable
     {
         private readonly bool _enabled;
