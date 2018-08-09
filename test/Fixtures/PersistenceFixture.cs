@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 using Xunit;
 
 using PipServices.Commons.Data;
-using PipServices.Oss.MongoDb;
 
 using MongoDB.Driver;
-using PipServices.Commons.Convert;
 
 namespace PipServices.Oss.Fixtures
 {
@@ -597,6 +595,148 @@ namespace PipServices.Oss.Fixtures
             // assert
             Assert.NotNull(result);
             Assert.Single(result.Data);
+        }
+
+        public async Task TestGetPageByArrayOfKeysFilter()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            var filter = FilterParams.FromTuples(
+                "key", $"{dummy1.Key},{dummy2.Key}"
+            );
+
+            // act
+            var result = await _persistence.GetAsync(null, filter, null, null);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Data.Count);
+
+            Assert.Equal(dummy1.Key, result.Data[0].Key);
+            Assert.Equal(dummy2.Key, result.Data[1].Key);
+        }
+
+        public async Task TestGetPageSortedByOneField()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            // keys: Key 1, Key 2, Key 3
+
+            var sortParams = new SortParams()
+            {
+                new SortField("key", false)
+            };
+
+            // result -> 3 (Key 3), 2 (Key 2), 1 (Key 1)
+
+            // act
+            var result = await _persistence.GetAsync(null, null, null, sortParams);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Data.Count);
+
+            Assert.Equal(dummy3.Key, result.Data[0].Key);
+            Assert.Equal(dummy2.Key, result.Data[1].Key);
+            Assert.Equal(dummy1.Key, result.Data[2].Key);
+        }
+
+        public async Task TestGetPageSortedByMultipleFields()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            // keys: Key 1, Key 2, Key 3
+            // dummy_type: not_dummy, dummy, dummy
+
+            var sortParams = new SortParams()
+            {
+                new SortField("dummy_type", false),
+                new SortField("key", false)
+            };
+
+            // result -> 1 (not dummy, Key 1), 3 (dummy, Key 3), 2 (dummy, Key 2)
+
+            // act
+            var result = await _persistence.GetAsync(null, null, null, sortParams);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Data.Count);
+
+            Assert.Equal(dummy1.Key, result.Data[0].Key);
+            Assert.Equal(dummy3.Key, result.Data[1].Key);
+            Assert.Equal(dummy2.Key, result.Data[2].Key);
+        }
+
+        public async Task TestGetPageByProjectionAndSortedByOneField()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            // keys: Key 1, Key 2, Key 3
+
+            var sortParams = new SortParams()
+            {
+                new SortField("key", false)
+            };
+
+            // result -> 3 (Key 3), 2 (Key 2), 1 (Key 1)
+
+            var projection = ProjectionParams.FromValues("key");
+
+            // act
+            dynamic result = await _persistence.GetAsync(null, null, null, sortParams, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Data.Count);
+
+            Assert.Equal(dummy3.Key, result.Data[0].key);
+            Assert.Equal(dummy2.Key, result.Data[1].key);
+            Assert.Equal(dummy1.Key, result.Data[2].key);
+        }
+
+        public async Task TestGetPageByProjectionAndSortedByMultipleFields()
+        {
+            // arrange 
+            var dummy1 = await _persistence.CreateAsync(null, _dummy1);
+            var dummy2 = await _persistence.CreateAsync(null, _dummy2);
+            var dummy3 = await _persistence.CreateAsync(null, _dummy3);
+
+            // keys: Key 1, Key 2, Key 3
+            // dummy_type: not_dummy, dummy, dummy
+
+            var sortParams = new SortParams()
+            {
+                new SortField("dummy_type", false),
+                new SortField("key", false)
+            };
+
+            // result -> 1 (not dummy, Key 1), 3 (dummy, Key 3), 2 (dummy, Key 2)
+
+            var projection = ProjectionParams.FromValues("key");
+
+            // act
+            dynamic result = await _persistence.GetAsync(null, null, null, sortParams, projection);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Data.Count);
+
+            Assert.Equal(dummy1.Key, result.Data[0].key);
+            Assert.Equal(dummy3.Key, result.Data[1].key);
+            Assert.Equal(dummy2.Key, result.Data[2].key);
         }
 
         private async Task AssertDelete(Dummy dummy)

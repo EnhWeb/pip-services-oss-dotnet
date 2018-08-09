@@ -335,7 +335,10 @@ namespace PipServices.Oss.MongoDb
                     continue;
                 }
 
-                filter &= builder.Eq(filterKey, filterParams[filterKey]);
+                var filterParam = filterParams[filterKey];
+
+                filter &= IsArray(filterParam) ? builder.In(filterKey, ToArrayOfType<string>(filterParam)) :
+                    builder.Eq(filterKey, filterParam);
             }
 
             return filter;
@@ -354,6 +357,16 @@ namespace PipServices.Oss.MongoDb
             }
 
             return builder.Combine(updateDefinitions);
+        }
+
+        protected virtual SortDefinition<T> ComposeSort(SortParams sortParams)
+        {
+            sortParams = sortParams ?? new SortParams();
+
+            var builder = Builders<T>.Sort;
+
+            return builder.Combine(sortParams.Select(field => field.Ascending ?
+                builder.Ascending(field.Name) : builder.Descending(field.Name)));
         }
 
         #endregion
@@ -376,6 +389,16 @@ namespace PipServices.Oss.MongoDb
 
             var items = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) as TT[];
             return (items != null && items.Length > 0) ? items : null;
+        }
+
+        protected static bool IsArray(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            return value.Split(',').Length > 1;
         }
 
         #endregion

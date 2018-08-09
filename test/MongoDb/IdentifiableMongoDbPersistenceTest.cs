@@ -164,6 +164,36 @@ namespace PipServices.Oss.MongoDb
             Fixture?.TestGetPageByIdsFilter().Wait();
         }
 
+        [Fact]
+        public void It_Should_Get_Page_By_Array_Of_Keys_Filter()
+        {
+            Fixture?.TestGetPageByArrayOfKeysFilter().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Page_Sorted_By_One_Field()
+        {
+            Fixture?.TestGetPageSortedByOneField().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Sales_Orders_Sorted_By_Multiple_Fields()
+        {
+            Fixture?.TestGetPageSortedByMultipleFields().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Sales_Orders_By_Projection_And_Sorted_By_One_Field()
+        {
+            Fixture?.TestGetPageByProjectionAndSortedByOneField().Wait();
+        }
+
+        [Fact]
+        public void It_Should_Get_Sales_Orders_By_Projection_And_Sorted_By_Multiple_Fields()
+        {
+            Fixture?.TestGetPageByProjectionAndSortedByMultipleFields().Wait();
+        }
+
         public void Dispose()
         {
             Db?.CloseAsync(null).Wait();

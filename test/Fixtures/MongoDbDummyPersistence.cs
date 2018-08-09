@@ -23,14 +23,14 @@ namespace PipServices.Oss.Fixtures
             return await DeleteByIdAsync(correlationId, id);
         }
 
-        public async Task<DataPage<Dummy>> GetAsync(string correlationId, FilterParams filter, PagingParams paging)
+        public async Task<DataPage<Dummy>> GetAsync(string correlationId, FilterParams filter, PagingParams paging, SortParams sort)
         {
-            return await GetPageByFilterAsync(correlationId, ComposeFilter(filter), paging);
+            return await GetPageByFilterAsync(correlationId, ComposeFilter(filter), paging, ComposeSort(sort));
         }
 
-        public async Task<DataPage<object>> GetAsync(string correlationId, FilterParams filter, PagingParams paging, ProjectionParams projection)
+        public async Task<DataPage<object>> GetAsync(string correlationId, FilterParams filter, PagingParams paging, SortParams sort, ProjectionParams projection)
         {
-            return await GetPageByFilterAndProjectionAsync(correlationId, ComposeFilter(filter), paging, null, projection);
+            return await GetPageByFilterAndProjectionAsync(correlationId, ComposeFilter(filter), paging, ComposeSort(sort), projection);
         }
 
         public async Task<Dummy> GetByIdAsync(string correlationId, string id)
