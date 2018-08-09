@@ -21,7 +21,7 @@
     <PackageReference Include="PipServices.Data" Version="2.3.3" />
     <PackageReference Include="PipServices.Commons" Version="2.4.4" />
     <PackageReference Include="PipServices.Net" Version="2.4.4" />
-    <PackageReference Include="VIEApps.Enyim.Caching" Version="1.5.2.1806" />
+    <PackageReference Include="VIEApps.Enyim.Caching" Version="1.5.0.1805" />
     <PackageReference Include="MongoDB.Driver" Version="2.6.1" />
     <PackageReference Include="Elasticsearch.Net" Version="6.2.0" />
     <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
