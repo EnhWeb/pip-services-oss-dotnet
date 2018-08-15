@@ -16,7 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PipServices.Oss.Memcached
 {
-    public class MemcachedCache : ICache, IConfigurable, IReferenceable, IOpenable
+    public class MemcachedCache : AbstractCache
     {
         private ConnectionResolver _connectionResolver = new ConnectionResolver();
         private CredentialResolver _credentialResolver = new CredentialResolver();
@@ -26,24 +26,24 @@ namespace PipServices.Oss.Memcached
         {
         }
 
-        public void Configure(ConfigParams config)
+        public override void Configure(ConfigParams config)
         {
             _connectionResolver.Configure(config);
             _credentialResolver.Configure(config);
         }
 
-        public void SetReferences(IReferences references)
+        public override void SetReferences(IReferences references)
         {
             _connectionResolver.SetReferences(references);
             _credentialResolver.SetReferences(references);
         }
 
-        public bool IsOpened()
+        public override bool IsOpened()
         {
             return _client != null;
         }
 
-        public async Task OpenAsync(string correlationId)
+        public async override Task OpenAsync(string correlationId)
         {
             var connections = await _connectionResolver.ResolveAllAsync(correlationId);
             if (connections.Count == 0)
@@ -71,7 +71,7 @@ namespace PipServices.Oss.Memcached
             _client = new MemcachedClient(null, options);
         }
 
-        public async Task CloseAsync(string correlationId)
+        public async override Task CloseAsync(string correlationId)
         {
             if (_client != null)
             {
@@ -88,14 +88,14 @@ namespace PipServices.Oss.Memcached
                 throw new InvalidStateException(correlationId, "NOT_OPENED", "Connection is not opened");
         }
 
-        public async Task<T> RetrieveAsync<T>(string correlationId, string key)
+        public async override Task<T> RetrieveAsync<T>(string correlationId, string key)
         {
             CheckOpened(correlationId);
 
             return await _client.GetAsync<T>(key);
         }
 
-        public async Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
+        public async override Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
         {
             CheckOpened(correlationId);
 
@@ -104,7 +104,7 @@ namespace PipServices.Oss.Memcached
             return result ? value : default(T);
         }
 
-        public async Task RemoveAsync(string correlationId, string key)
+        public async override Task RemoveAsync(string correlationId, string key)
         {
             CheckOpened(correlationId);
 

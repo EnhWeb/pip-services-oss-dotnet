@@ -117,9 +117,15 @@ namespace PipServices.Oss.MongoDb
         }
 
         [Fact]
+        public void It_Should_Modify_Object_With_Existing_Properties_By_Selected_Not_Changed_Fields()
+        {
+            Fixture?.TestModifyExistingPropertiesBySelectedNotChangedFields().Wait();
+        }
+
+        [Fact]
         public void It_Should_Modify_Object_With_Null_Properties_By_Selected_Fields()
         {
-            Fixture?.TestModifyExistingPropertiesBySelectedFields().Wait();
+            Fixture?.TestModifyNullPropertiesBySelectedFields().Wait();
         }
 
         [Fact]

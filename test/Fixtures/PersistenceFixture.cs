@@ -421,6 +421,28 @@ namespace PipServices.Oss.Fixtures
             Assert.Equal("Modified InnerDummy Description", result.InnerDummy.Description);
         }
 
+        public async Task TestModifyExistingPropertiesBySelectedNotChangedFields()
+        {
+            // arrange 
+            var dummy = await _persistence.CreateAsync(null, _dummy1);
+
+            // no changes
+            var updateMap = new AnyValueMap()
+            {
+                { "Content", dummy.Content },
+                { "InnerDummy.Description", dummy.InnerDummy.Description }
+            };
+
+            // act
+            var result = await _persistence.ModifyByIdAsync(null, dummy.Id, ComposeUpdate(updateMap));
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(dummy.Id, result.Id);
+            Assert.Equal(dummy.Content, result.Content);
+            Assert.Equal(dummy.InnerDummy.Description, result.InnerDummy.Description);
+        }
+
         public async Task TestModifyNullPropertiesBySelectedFields()
         {
             // arrange 

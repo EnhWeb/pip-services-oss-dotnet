@@ -14,7 +14,7 @@ using StackExchange.Redis;
 
 namespace PipServices.Oss.Redis
 {
-    public class RedisCache: ICache, IConfigurable, IReferenceable, IOpenable
+    public class RedisCache: AbstractCache
     {
         private ConnectionResolver _connectionResolver = new ConnectionResolver();
         private CredentialResolver _credentialResolver = new CredentialResolver();
@@ -29,7 +29,7 @@ namespace PipServices.Oss.Redis
         {
         }
 
-        public void Configure(ConfigParams config)
+        public override void Configure(ConfigParams config)
         {
             _connectionResolver.Configure(config);
             _credentialResolver.Configure(config);
@@ -39,18 +39,18 @@ namespace PipServices.Oss.Redis
             _retries = config.GetAsIntegerWithDefault("options.retries", _retries);
         }
 
-        public void SetReferences(IReferences references)
+        public override void SetReferences(IReferences references)
         {
             _connectionResolver.SetReferences(references);
             _credentialResolver.SetReferences(references);
         }
 
-        public bool IsOpened()
+        public override bool IsOpened()
         {
             return _client != null;
         }
 
-        public async Task OpenAsync(string correlationId)
+        public async override Task OpenAsync(string correlationId)
         {
             var connection = await _connectionResolver.ResolveAsync(correlationId);
             if (connection == null)
@@ -84,7 +84,7 @@ namespace PipServices.Oss.Redis
             _database = _client.GetDatabase();
         }
 
-        public async Task CloseAsync(string correlationId)
+        public async override Task CloseAsync(string correlationId)
         {
             if (_client != null)
             {
@@ -100,7 +100,7 @@ namespace PipServices.Oss.Redis
                 throw new InvalidStateException(correlationId, "NOT_OPENED", "Connection is not opened");
         }
 
-        public async Task<T> RetrieveAsync<T>(string correlationId, string key)
+        public async override Task<T> RetrieveAsync<T>(string correlationId, string key)
         {
             CheckOpened(correlationId);
 
@@ -110,7 +110,7 @@ namespace PipServices.Oss.Redis
             return value;
         }
 
-        public async Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
+        public async override Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
         {
             CheckOpened(correlationId);
 
@@ -120,7 +120,7 @@ namespace PipServices.Oss.Redis
             return result ? value : default(T);
         }
 
-        public async Task RemoveAsync(string correlationId, string key)
+        public async override Task RemoveAsync(string correlationId, string key)
         {
             CheckOpened(correlationId);
 
