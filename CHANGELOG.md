@@ -1,6 +1,6 @@
 # Open source components for Pip.Services in .NET Changelog
 
-## <a name="1.1.0-1.1.36"></a> 1.1.0-1.1.36 (2018-08-15)
+## <a name="1.1.0-1.1.37"></a> 1.1.0-1.1.37 (2018-08-15)
 
 * Moved MockDb persistence to PipServices.Data
 

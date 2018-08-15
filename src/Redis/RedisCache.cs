@@ -31,6 +31,8 @@ namespace PipServices.Oss.Redis
 
         public override void Configure(ConfigParams config)
         {
+            base.Configure(config);
+
             _connectionResolver.Configure(config);
             _credentialResolver.Configure(config);
 
@@ -113,6 +115,8 @@ namespace PipServices.Oss.Redis
         public async override Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
         {
             CheckOpened(correlationId);
+
+            timeout = timeout > 0 ? timeout : Timeout;
 
             var json = JsonConverter.ToJson(value);
             var result = await _database.StringSetAsync(key, json, TimeSpan.FromMilliseconds(timeout));

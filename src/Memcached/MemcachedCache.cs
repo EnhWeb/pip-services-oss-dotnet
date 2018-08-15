@@ -28,6 +28,8 @@ namespace PipServices.Oss.Memcached
 
         public override void Configure(ConfigParams config)
         {
+            base.Configure(config);
+
             _connectionResolver.Configure(config);
             _credentialResolver.Configure(config);
         }
@@ -98,6 +100,8 @@ namespace PipServices.Oss.Memcached
         public async override Task<T> StoreAsync<T>(string correlationId, string key, T value, long timeout)
         {
             CheckOpened(correlationId);
+
+            timeout = timeout > 0 ? timeout : Timeout;
 
             var result = await _client.StoreAsync(Enyim.Caching.Memcached.StoreMode.Set, key, value, TimeSpan.FromMilliseconds(timeout));
 
