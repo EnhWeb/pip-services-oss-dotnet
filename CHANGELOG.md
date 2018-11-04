@@ -1,7 +1,8 @@
 # Open source components for Pip.Services in .NET Changelog
 
-## <a name="1.1.0-1.1.38"></a> 1.1.0-1.1.38 (2018-09-27)
+## <a name="1.1.0-1.1.39"></a> 1.1.0-1.1.39 (2018-11-03)
 
+* Added partition persistence specific for Cosmos Mongo DB
 * Moved MockDb persistence to PipServices.Data
 
 ### Features

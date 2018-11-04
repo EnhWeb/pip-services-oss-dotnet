@@ -19,6 +19,10 @@ namespace PipServices.Oss.Fixtures
     [BsonIgnoreExtraElements]
     public class Dummy : IStringIdentifiable
     {
+        [BsonElement("partition_key")]
+        [DataMember(Name = "partition_key")]
+        public string PartitionKey { get { return $"{Math.Abs(Id.GetHashCode() % 3)}"; } set { } }
+
         [BsonElement("id")]
         [DataMember(Name = "id")]
         public string Id { get; set; }

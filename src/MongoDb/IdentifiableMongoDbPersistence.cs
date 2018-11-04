@@ -33,7 +33,7 @@ namespace PipServices.Oss.MongoDb
             _maxPageSize = config.GetAsIntegerWithDefault("options.max_page_size", _maxPageSize);
         }
 
-        public async Task<DataPage<T>> GetPageByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition,
+        public virtual async Task<DataPage<T>> GetPageByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition,
             PagingParams paging = null, SortDefinition<T> sortDefinition = null)
         {
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
@@ -106,7 +106,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<List<T>> GetListByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition,
+        public virtual async Task<List<T>> GetListByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition,
             SortDefinition<T> sortDefinition = null)
         {
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
@@ -123,7 +123,7 @@ namespace PipServices.Oss.MongoDb
             return items;
         }
 
-        public async Task<List<T>> GetListByIdsAsync(string correlationId, K[] ids)
+        public virtual async Task<List<T>> GetListByIdsAsync(string correlationId, K[] ids)
         {
             
             var documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<T>();
@@ -140,7 +140,7 @@ namespace PipServices.Oss.MongoDb
         }
 
 
-        public async Task<T> GetOneByIdAsync(string correlationId, K id)
+        public virtual async Task<T> GetOneByIdAsync(string correlationId, K id)
         {
             var builder = Builders<T>.Filter;
             var filter = builder.Eq(x => x.Id, id);
@@ -206,7 +206,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<T> CreateAsync(string correlationId, T item)
+        public virtual async Task<T> CreateAsync(string correlationId, T item)
         {
             var identifiable = item as IStringIdentifiable;
             if (identifiable != null && item.Id == null)
@@ -219,7 +219,7 @@ namespace PipServices.Oss.MongoDb
             return item;
         }
 
-        public async Task<T> SetAsync(string correlationId, T item)
+        public virtual async Task<T> SetAsync(string correlationId, T item)
         {
             var identifiable = item as IIdentifiable<K>;
             if (identifiable == null || item.Id == null)
@@ -238,7 +238,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<T> UpdateAsync(string correlationId, T item)
+        public virtual async Task<T> UpdateAsync(string correlationId, T item)
         {
             var identifiable = item as IIdentifiable<K>;
             if (identifiable == null || item.Id == null)
@@ -257,7 +257,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<T> ModifyAsync(string correlationId, FilterDefinition<T> filterDefinition, UpdateDefinition<T> updateDefinition)
+        public virtual async Task<T> ModifyAsync(string correlationId, FilterDefinition<T> filterDefinition, UpdateDefinition<T> updateDefinition)
         {
             if (filterDefinition == null || updateDefinition == null)
             {
@@ -277,7 +277,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<T> ModifyByIdAsync(string correlationId, K id, UpdateDefinition<T> updateDefinition)
+        public virtual async Task<T> ModifyByIdAsync(string correlationId, K id, UpdateDefinition<T> updateDefinition)
         {
             if (id == null || updateDefinition == null)
             {
@@ -291,7 +291,7 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task<T> DeleteByIdAsync(string correlationId, K id)
+        public virtual async Task<T> DeleteByIdAsync(string correlationId, K id)
         {
             var filter = Builders<T>.Filter.Eq(x => x.Id, id);
             var options = new FindOneAndDeleteOptions<T>();
@@ -302,14 +302,14 @@ namespace PipServices.Oss.MongoDb
             return result;
         }
 
-        public async Task DeleteByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition)
+        public virtual async Task DeleteByFilterAsync(string correlationId, FilterDefinition<T> filterDefinition)
         {
             var result = await _collection.DeleteManyAsync(filterDefinition);
 
             _logger.Trace(correlationId, $"Deleted {result.DeletedCount} from {_collection}");
         }
 
-        public async Task DeleteByIdsAsync(string correlationId, K[] ids)
+        public virtual async Task DeleteByIdsAsync(string correlationId, K[] ids)
         {
             var filterDefinition = Builders<T>.Filter.In(x => x.Id, ids);
 
