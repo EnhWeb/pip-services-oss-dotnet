@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using PipServices.Commons.Auth;
 using PipServices.Commons.Config;
@@ -153,16 +152,6 @@ namespace PipServices.Oss.MongoDb
         public Task ClearAsync(string correlationId)
         {
             return _database.DropCollectionAsync(_collectionName);
-        }
-
-        protected async Task<bool> CollectionExistsAsync()
-        {
-            var collections = await _database.ListCollectionsAsync(new ListCollectionsOptions
-            {
-                Filter = new BsonDocument("name", _collectionName)
-            });
-
-            return await collections.AnyAsync();
         }
     }
 }
