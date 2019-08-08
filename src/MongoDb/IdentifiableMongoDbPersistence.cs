@@ -79,7 +79,6 @@ namespace PipServices.Oss.MongoDb
             var take = paging.GetTake(_maxPageSize);
 
             var count = paging.Total ? (long?)await query.CountAsync() : null;
-            var items = await query.Project(projectionDefinition).Skip((int)skip).Limit((int)take).ToListAsync();
 
             var result = new DataPage<object>()
             {

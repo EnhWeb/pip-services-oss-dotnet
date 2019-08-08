@@ -2,11 +2,11 @@
 <package>
   <metadata>
     <id>PipServices.Oss</id>
-    <version>1.1.41</version>
+    <version>1.1.42</version>
     <title>PipServices.Oss</title>
     <authors>Sergey Seroukhov, Alex Mazur, Andrew Harrington</authors>
     <projectUrl>https://github.com/pip-services/pip-services-oss-dotnet</projectUrl>
-    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <license type="expression">MIT</license>
     <iconUrl>https://raw.githubusercontent.com/pip-services/pip-services/master/design/Icon.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Open source components for Pip.Services in .NET</description>
